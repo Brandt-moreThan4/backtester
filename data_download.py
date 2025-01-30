@@ -1,16 +1,19 @@
 import pandas as pd
 import yfinance as yf
+DATA_FOLDER = 'data/'
 
 
 
+class DataBlob:
 
-class DataDownloader:
-
-    def __init__(self,tickers:list[str]):
+    def __init__(self,tickers:list[str],download:bool=True) -> None:
         self.input_tickers = tickers
+        self.adjusted_prices_df:pd.DataFrame = None
+        self.rets_df:pd.DataFrame = None
 
-        self.download_data()
-        self.clean_data()
+        if download:
+            self.download_data()
+            self.clean_data()
 
     def download_data(self) -> pd.DataFrame:
 
@@ -43,11 +46,29 @@ class DataDownloader:
 
         return self.rets_df
     
+    def __repr__(self) -> str:
+        return f'DataBlob: {self.tickers}'
+    
+    @property
+    def tickers(self) -> list[str]:
+        return self.rets_df.columns.tolist()
+    
+    def save_data(self) -> None:
+        self.rets_df.to_csv(f'{DATA_FOLDER}rets_df.csv')
+        self.adjusted_prices_df.to_csv(f'{DATA_FOLDER}adjusted_prices_df.csv')
+
+    @staticmethod
+    def load_saved_data() -> "DataBlob":
+        dblob = DataBlob(tickers=None,download=False)
+        dblob.rets_df = pd.read_csv(f'{DATA_FOLDER}rets_df.csv',index_col=0,parse_dates=True)
+        dblob.adjusted_prices_df = pd.read_csv(f'{DATA_FOLDER}adjusted_prices_df.csv',index_col=0,parse_dates=True)
+        return dblob
+
 
 
 if __name__ == '__main__':
-    tickers = ['AAPL','MSFT','AMZN','GOOGL','META']
-    downloader = DataDownloader(tickers)
-    print(downloader.rets_df)
-    print(downloader.adjusted_prices_df)
+
+    tickers = ['AAPL','MSFT','AMZN','GOOGL','META','TSLA','JPM']
+    downloader = DataBlob(tickers)
+    downloader.save_data()
 
