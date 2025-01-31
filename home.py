@@ -12,13 +12,15 @@ st.title("Portfolio Backtester")
 # User Input Section
 # ----------------------------
 
-# Add a toggle to allow person to fetch new data
+st.markdown("## User Inputs")
 
-st.markdown('## User Inputs')
+# Option to fetch new data
 fetch_new_data = st.checkbox("Fetch New Data", value=False)
 
 def get_user_inputs():
     """Fetch user inputs from Streamlit widgets."""
+    
+
     # Ticker Input
     tickers_input = st.text_area(
         "Enter tickers separated by commas (e.g., AAPL, MSFT, AMZN, GOOGL, META, TSLA, JPM):",
@@ -53,13 +55,34 @@ def get_user_inputs():
 
     today = dt.datetime.today()
     yesterday = today - dt.timedelta(days=1)
-    prior_year_end = today.replace(year=today.year - 1, month=12, day=31)
-    one_year_ago = today.replace(year=today.year - 1) - dt.timedelta(days=1)
-    three_years_ago = today.replace(year=today.year - 3) - dt.timedelta(days=1)
-    five_years_ago = today.replace(year=today.year - 5) - dt.timedelta(days=1)
+    prior_year_end = dt.datetime(today.year - 1, 12, 31)
+    one_year_ago = today - dt.timedelta(days=365)
+    three_years_ago = today - dt.timedelta(days=3 * 365)
 
-    # Date Input
-    start_date = st.date_input("Start Date", prior_year_end)
+    # Date range selection dropdown
+    date_option = st.selectbox(
+        "Select a time range:",
+        ["Custom", "1D", "YTD", "1 Year", "3 Years"]
+    )
+
+
+    # Auto-set dates based on selection
+    if date_option == "1D":
+        start_date_option = yesterday - dt.timedelta(days=1)
+    elif date_option == '3-Month':
+        start_date_option = dt.datetime(today.year, today.month, 1)
+    elif date_option == "YTD":
+        start_date_option = prior_year_end
+    elif date_option == "1 Year":
+        start_date_option = one_year_ago
+    elif date_option == "3 Years":
+        start_date_option = three_years_ago
+    else:
+        start_date_option = prior_year_end
+
+    start_date_option = start_date_option.date()
+
+    start_date = st.date_input("Start Date", start_date_option)
 
     end_date = st.date_input("End Date", yesterday)
 
@@ -67,26 +90,31 @@ def get_user_inputs():
         st.error("Start date must be before end date.")
         st.stop()
 
-    return tickers, weights, start_date, end_date
+
+    port_name = st.text_input("Enter a name for your portfolio:", "60/40")
+
+    return tickers, weights, start_date, end_date, port_name
 
 # Fetch user inputs
-tickers, weights, start_date, end_date = get_user_inputs()
+tickers, weights, start_date, end_date, port_name = get_user_inputs()
 
 # ----------------------------
 # Data Loading & Processing
 # ----------------------------
 
+st.markdown("## Data Processing")
+
 # Load market data
 if fetch_new_data:
-    # Add a progress bar to show data download progress 
-    data = dd.DataBlob(tickers,download=True)
+    with st.spinner("Fetching new data..."):
+        data = dd.DataBlob(tickers, download=True)
 else:
     data = dd.DataBlob.load_saved_data()
 
 # Ensure selected tickers exist in dataset
 missing_tickers = [t for t in tickers if t not in data.tickers]
 if missing_tickers:
-    st.error(f"Some tickers are missing from data and I'm not meant to handle that yet... {', '.join(missing_tickers)}")
+    st.error(f"Some tickers are missing from data: {', '.join(missing_tickers)}")
     st.stop()
 
 # Filter returns dataframe to selected tickers
@@ -96,22 +124,25 @@ data.rets_df = data.rets_df[tickers].copy()
 # Backtest Execution
 # ----------------------------
 
-# Show a progress bar to indicate backtest progress...?
-st.subheader("Running Backtest...")
 
-backtester = bt.Backtester(
-    data_blob=data,
-    tickers=tickers,
-    weights=weights,
-    start_date=str(start_date),
-    end_date=str(end_date),
-)
-backtester.run_backtest()
+with st.spinner("Running backtest..."):
+    backtester = bt.Backtester(
+        data_blob=data,
+        tickers=tickers,
+        weights=weights,
+        start_date=str(start_date),
+        end_date=str(end_date),
+    )
+    backtester.run_backtest()
 
 # ----------------------------
 # Data Visualization
 # ----------------------------
-st.markdown('## Results')
+
+st.markdown("## Results")
+
+
+
 # Cumulative Portfolio Returns
 st.subheader("Cumulative Returns of Portfolio")
 
@@ -132,9 +163,25 @@ st.plotly_chart(fig2)
 # Display Data Summary
 # ----------------------------
 
-st.subheader("Data Summary")
+st.markdown("## Data Summary")
 st.write("Return Data:")
 st.write(data.rets_df)
 
 st.write("Portfolio History:")
 st.write(backtester.portfolio_history_df)
+
+
+
+st.markdown('## Raw Data Reference')
+
+st.markdown('### Rebalance Dates')
+dates = backtester.rebalance_dates
+dates.name = 'Rebalance Dates'
+# show as date only, not datetime
+dates = pd.Series(dates.date,name='Rebalance Dates')
+st.write(dates)
+
+st.markdown('### Indvidual Returns')
+st.write(data.rets_df.head())
+st.write(data.rets_df.tail())
+st.write(data.rets_df)
