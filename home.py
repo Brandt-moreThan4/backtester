@@ -7,7 +7,25 @@ import data_download as dd
 import backtester as bt
 
 st.title("Portfolio Backtester")
+html_title = """
+<h4 style="font-family: 'Arial', sans-serif; font-size: 1.2rem; font-weight: bold; font-style: italic; color: #555; margin-top: -10px; margin-bottom: 20px; text-shadow: 1px 1px #ddd;">A Brandt Green Production</h4>
+"""
+st.markdown(html_title, unsafe_allow_html=True)
 
+
+st.sidebar.markdown("## Table of Contents")
+st.sidebar.markdown("""
+- [User Inputs](#user-inputs)
+- [Data Processing](#data-processing)
+- [Results](#results)
+  - [Cumulative Returns](#cumulative-returns-of-portfolio)
+  - [Portfolio Weights](#portfolio-weights-over-time)
+- [Raw Data Reference](#raw-data-reference)
+  - [Rebalance Dates](#rebalance-dates)
+  - [Individual Returns](#individual-returns)
+  - [Portfolio History](#portfolio-history)
+  - [Portfolio Weights](#portfolio-weights)
+""", unsafe_allow_html=True)
 # ----------------------------
 # User Input Section
 # ----------------------------
@@ -32,9 +50,10 @@ def get_user_inputs():
         st.error("Please enter at least one valid ticker.")
         st.stop()
 
+    st.markdown("#### Portfolio Weights")
     # Weights Input
     equal_weights = [1 / len(tickers)] * len(tickers)
-    weights_input = st.text_input(
+    weights_input = st.text_area(
         "Enter weights for each ticker (comma-separated, should sum to 1):",
         ",".join(map(str, equal_weights))
     )
@@ -56,7 +75,7 @@ def get_user_inputs():
     today = dt.datetime.today()
     yesterday = today - dt.timedelta(days=1)
     prior_year_end = dt.datetime(today.year - 1, 12, 31)
-    one_year_ago = today - dt.timedelta(days=365)
+    one_year_ago = today.replace(year=today.year - 1)
     three_years_ago = today - dt.timedelta(days=3 * 365)
 
     # Date range selection dropdown
@@ -83,7 +102,7 @@ def get_user_inputs():
     start_date_option = start_date_option.date()
 
     start_date = st.date_input("Start Date", start_date_option)
-
+    
     end_date = st.date_input("End Date", yesterday)
 
     if start_date >= end_date:
@@ -144,14 +163,23 @@ st.markdown("## Results")
 
 
 # Cumulative Portfolio Returns
-st.subheader("Cumulative Returns of Portfolio")
+st.subheader("Cumulative Returns")
 
-stock_rets = data.rets_df.fillna(0)
+stock_rets = data.rets_df.loc[start_date:end_date].fillna(0) # This start date might be 1 day early
 cumulative_rets = (1 + stock_rets).cumprod() - 1
-combo_cum_df = pd.concat([backtester.wealth_index, cumulative_rets], axis=1).dropna()
+combo_cum_df = pd.concat([backtester.wealth_index - 1, cumulative_rets], axis=1).dropna()
+combo_cum_df = combo_cum_df.rename(columns={0: "Portfolio"})
 
-fig1 = px.line(combo_cum_df, title="Cumulative Returns of Portfolio")
+# Plot the cumulative return with the y axis as a percentage
+fig1 = px.line(combo_cum_df, title="Cumulative Returns")
+fig1.update_yaxes(tickformat=".2%")
+
 st.plotly_chart(fig1)
+
+# Add a table of cumulative returns (# How to make below prettier?) At very least it shoudl be a heat map
+total_rets = (combo_cum_df.iloc[-1]*100).sort_values(ascending=False)
+total_rets = pd.Series([f"{x:.2f}%" for x in total_rets], index=total_rets.index,name='Total Returns')
+st.write(total_rets)
 
 # Portfolio Weights Over Time
 st.subheader("Portfolio Weights Over Time")
@@ -163,12 +191,7 @@ st.plotly_chart(fig2)
 # Display Data Summary
 # ----------------------------
 
-st.markdown("## Data Summary")
-st.write("Return Data:")
-st.write(data.rets_df)
 
-st.write("Portfolio History:")
-st.write(backtester.portfolio_history_df)
 
 
 
@@ -182,6 +205,14 @@ dates = pd.Series(dates.date,name='Rebalance Dates')
 st.write(dates)
 
 st.markdown('### Indvidual Returns')
+st.write("Head:")
 st.write(data.rets_df.head())
+st.write("Tail:")
 st.write(data.rets_df.tail())
 st.write(data.rets_df)
+
+st.markdown('### Portfolio History')
+st.write(backtester.portfolio_history_df)
+
+st.markdown('### Portfolio Weights')
+st.write(backtester.weights_df)
