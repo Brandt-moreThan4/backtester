@@ -22,6 +22,7 @@ class Backtester:
         end_date: str,
         initial_capital: float = 1_000_000,
         rebal_freq: str = 'QE',
+        port_name: str = 'Port',
         params: dict = {}
     ) -> None:
 
@@ -29,6 +30,7 @@ class Backtester:
         self.rets_df = data_blob.rets_df
         self.input_tickers = tickers
         self.input_weights = weights
+        self.port_name = port_name
         self.start_date = start_date
         self.end_date = end_date
         self.current_date = start_date
@@ -40,11 +42,12 @@ class Backtester:
         self.validate_data()
 
 
-        self.portfolio = pd.Series(index=self.input_tickers,data=0.0)
+        self.portfolio = pd.Series(index=self.input_tickers,data=0.0,name=self.port_name)
         self.portfolio['Cash'] = initial_capital
         
         # Master dataframe to store the historical portfolio holdings
         self.portfolio_history_df = pd.DataFrame(index=self.strat_dates,columns=self.input_tickers)
+        # self.portfolio_history_df.index.name
 
         # Just a catch all for any additional parameters that may be passed in for a substrategy
         self.params = params
