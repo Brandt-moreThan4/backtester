@@ -86,6 +86,6 @@ if __name__ == '__main__':
     back.run_backtest()
 
 
-    cleaned_inputs = inputs.CleanInputs(tickers=['AAPL','MSFT'],weights_input='0.5,0.5',start_date=dt.datetime(2010,1,1),end_date=dt.datetime(2020,1,1),port_name='Portfolio',rebalance_freq='QE',fetch_new_data=False)
+    cleaned_inputs = inputs.CleanInputs(tickers=['AAPL','MSFT'],weights='0.5,0.5',start_date=dt.datetime(2010,1,1),end_date=dt.datetime(2020,1,1),port_name='Portfolio',rebalance_freq='QE',fetch_new_data=False)
 
     display_results(back,data,cleaned_inputs)

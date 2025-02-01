@@ -11,7 +11,7 @@ import datetime as dt
 class CleanInputs:
 
     tickers: list
-    weights_input: str
+    weights: str
     start_date: dt.datetime
     end_date: dt.datetime
     port_name: str
@@ -28,33 +28,55 @@ def get_user_inputs():
     fetch_new_data = st.toggle("Query Updated Data", value=False)
     st.write("If you want to fetch new data, toggle the switch above... Please be cautious.")
 
+    # ------------------
     # Ticker Input
+    # ------------------
+
     st.markdown("#### Tickers")
     tickers_input = st.text_area(
-        "Enter tickers separated by commas (e.g., AAPL, MSFT, AMZN, GOOGL, META, TSLA, JPM):",
-        "SPY, JPM"
+        "Enter tickers separated by spaces (e.g., AAPL MSFT AMZN GOOGL META TSLA JPM):",
+        "SPY JPM"
     )
-    tickers = [t.strip().upper() for t in tickers_input.split(",") if t.strip()]
 
-    st.markdown("#### Portfolio Weights")
+    tickers = [t.strip().upper() for t in tickers_input.split(" ") if t.strip()]
+
+    # ------------------
     # Weights Input
-    equal_weights = [1 / len(tickers)] * len(tickers)
+    # ------------------
+    st.markdown("#### Portfolio Weights")
+
+    equal_weights = [1 / len(tickers) * 100]  * len(tickers)
+    equal_weights = [f'{round(w, 2)}' for w in equal_weights]
+    equal_weights_str = " ".join(equal_weights)
+    weights_msg = "Enter weights for each ticker (space-separated, as percentagses should sum to 1, e.g, 35 25 40:"
     weights_input = st.text_area(
-        "Enter weights for each ticker (comma-separated, should sum to 1):",
-        ",".join(map(str, equal_weights))
+        weights_msg,
+        equal_weights_str
     )
 
+    weights_input = [float(w)/100 for w in weights_input.split(" ")]
+
+    # Validat that weights are closish to 1
+
+    DIFF_THRESHOLD = .05
+    if abs(1 - sum(weights_input)) > DIFF_THRESHOLD:
+        st.error(f"Your weights do not sum to 1. Please ensure they sum to 1. Current sum: {sum(weights_input)}")
+        st.stop()
+
+    # ------------------
     # Date Selection
+    # ------------------
+
     st.markdown("#### Date Range")
     today = dt.datetime.today()
     yesterday = today - dt.timedelta(days=1)
     prior_year_end = dt.datetime(today.year - 1, 12, 31)
-    one_year_ago = today.replace(year=today.year - 1)
-    three_years_ago = today - dt.timedelta(days=3 * 365)
+    one_year_ago = yesterday.replace(year=today.year - 1) - dt.timedelta(days=1)
+    three_years_ago = yesterday.replace(year=today.year - 3) - dt.timedelta(days=1)
 
     # Date range selection dropdown
     date_option = st.selectbox(
-        "Select a time range:",
+        "Select a time range (assists in picking start date):",
         ["Custom", "1D", "YTD", "1 Year", "3 Years"],
         index=2,  # Default to "YTD"
     )
@@ -66,15 +88,25 @@ def get_user_inputs():
         "1 Year": one_year_ago,
         "3 Years": three_years_ago,
     }
-    start_date_default = date_dict.get(date_option, prior_year_end).date()
+
+
+    start_date_default = date_dict.get(date_option,None)
+    if start_date_default is None:
+        # If the default is none, put whatever the last date is
+        start_date_default = yesterday
 
     # Start date (users can override)
     start_date = st.date_input("Start Date (Assumes you invest at close of this date):", start_date_default)
 
     # End Date Selection
+    # if date_option != 'Custom':
     end_date = st.date_input("End Date (Assumes you liquidate at close of this date):", yesterday)
-
+    # else:
+    #     end_date = st.date_input("End Date (Assumes you liquidate at close of this date):")
+    # ------------------
     # Rebalance Frequency Selection
+    # ------------------
+
     st.markdown("#### Rebalancing Options")
     rebalance_freq = st.selectbox(
         "Select rebalance frequency:",

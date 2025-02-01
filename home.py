@@ -79,7 +79,7 @@ with st.spinner("Running backtest..."):
     backtester = bt.Backtester(
         data_blob=data,
         tickers=cleaned_inputs.tickers,
-        weights=[float(w) for w in cleaned_inputs.weights_input.split(",")],
+        weights=cleaned_inputs.weights,
         start_date=str(cleaned_inputs.start_date),
         end_date=str(cleaned_inputs.end_date),
         rebal_freq=cleaned_inputs.rebalance_freq,
