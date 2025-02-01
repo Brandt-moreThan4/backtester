@@ -50,6 +50,10 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
             fig.update_xaxes(title_text="Date")
             st.plotly_chart(fig)
 
+            # Add on another bar chart that shows the return on different time perios.
+            total_ret = cum_rets_df[ticker].iloc[-1]
+            st.write(f"Total Return: {total_ret:.2%}")
+
     st.markdown("### Individual Prices")
     st.write('_Prices are not adjusted for splits or dividends_')
     price_tabs = st.tabs(security_prices_df.columns.to_list())
@@ -59,8 +63,6 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
             fig.update_yaxes(title_text="Price")
             fig.update_xaxes(title_text="Date")
             st.plotly_chart(fig)
-
-    # Prices
 
 
     # Metrics

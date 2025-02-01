@@ -60,8 +60,12 @@ def get_user_inputs():
 
     DIFF_THRESHOLD = .05
     if abs(1 - sum(weights_input)) > DIFF_THRESHOLD:
+
         st.error(f"Your weights do not sum to 1. Please ensure they sum to 1. Current sum: {sum(weights_input)}")
         st.stop()
+    
+    # Rescale the weights anyway (to handle when they are super close)
+    weights_input = [w / sum(weights_input) for w in weights_input]
 
     # ------------------
     # Date Selection
