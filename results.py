@@ -11,13 +11,14 @@ import inputs
 
 def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:inputs.CleanInputs) -> None:
 
+    start_dt = pd.to_datetime(cleaned_inputs.start_date)
 
     # Security returns should be after the start date (non inclusive) and before the end date (inclusive)
-    security_rets_df = data.rets_df[data.rets_df.index > pd.to_datetime(cleaned_inputs.start_date)].loc[:cleaned_inputs.end_date]
+    security_rets_df = data.rets_df[data.rets_df.index > start_dt].loc[:cleaned_inputs.end_date]
     security_rets_df = security_rets_df[cleaned_inputs.tickers]
     all_rets_df = pd.concat([backtest.port_returns, security_rets_df], axis=1)
-    security_prices_df = data.adjusted_prices_df[data.adjusted_prices_df.index > pd.to_datetime(cleaned_inputs.start_date)].loc[:cleaned_inputs.end_date]
-    st.write(security_prices_df)
+    security_prices_df = data.price_df[data.price_df.index > start_dt].loc[:cleaned_inputs.end_date]
+    security_prices_df = security_prices_df[cleaned_inputs.tickers]
     st.markdown("### Cumulative Returns of Portfolio")
 
     cum_rets_df = (1 + all_rets_df).cumprod() - 1
@@ -41,8 +42,8 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     # Returns
     st.markdown("### Individual Returns")
     # Add a tab for each of the securities and show a plot of it's indivdiual cumualtive return
-    tabs = st.tabs(cum_rets_df.columns.to_list())
-    for ticker, tab in zip(cum_rets_df.columns, tabs):
+    ret_tabs = st.tabs(cum_rets_df.columns.to_list())
+    for ticker, tab in zip(cum_rets_df.columns, ret_tabs):
         with tab:
             fig = px.line(cum_rets_df[ticker], title=f"{ticker} Cumulative Return")
             fig.update_yaxes(tickformat=".2%",title_text="Cumulative Return")
@@ -50,13 +51,14 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
             st.plotly_chart(fig)
 
     st.markdown("### Individual Prices")
-
-    # for ticker in cum_rets_df.columns:
-    #     fig = px.line(cum_rets_df[ticker], title=f"{ticker} Cumulative Return")
-    #     fig.update_yaxes(tickformat=".2%",title_text="Cumulative Return")
-    #     fig.update_xaxes(title_text="Date")
-    #     st.plotly_chart(fig)
-    
+    st.write('_Prices are not adjusted for splits or dividends_')
+    price_tabs = st.tabs(security_prices_df.columns.to_list())
+    for ticker, tab in zip(security_prices_df.columns, price_tabs):
+        with tab:
+            fig = px.line(security_prices_df[ticker], title=f"{ticker} Prices")
+            fig.update_yaxes(title_text="Price")
+            fig.update_xaxes(title_text="Date")
+            st.plotly_chart(fig)
 
     # Prices
 

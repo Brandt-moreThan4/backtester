@@ -12,6 +12,8 @@ class DataEngine:
     def __init__(self) -> None:
         self.adjusted_prices_df:pd.DataFrame = None
         self.rets_df:pd.DataFrame = None
+        self.price_df:pd.DataFrame = None
+        self.raw_data_df:pd.DataFrame = None
 
 
     def download_new_data(self,tickers:list[str]) -> pd.DataFrame:
@@ -29,7 +31,10 @@ class DataEngine:
         # Copy the raw data
         df = self.raw_data_df.copy()
 
+        df.index = pd.to_datetime(df.index)
+
         self.price_df = df.loc[:, (slice(None), 'Close')]
+        self.price_df.columns = self.price_df.columns.droplevel(1)
 
         # We only need the adjusted close price for each stock (which is on the second level of the columns)
         adjusted_prices_df = df.loc[:, (slice(None), 'Adj Close')].copy()
@@ -68,6 +73,7 @@ class DataEngine:
         dblob.rets_df = pd.read_csv(f'{DATA_FOLDER}rets_df.csv',index_col=0,parse_dates=True)
         dblob.adjusted_prices_df = pd.read_csv(f'{DATA_FOLDER}adjusted_prices_df.csv',index_col=0,parse_dates=True)
         dblob.price_df = pd.read_csv(f'{DATA_FOLDER}price_df.csv',index_col=0,parse_dates=True)
+        dblob.price_df.index = pd.to_datetime(dblob.price_df.index)
 
         return dblob
 
@@ -78,10 +84,17 @@ if __name__ == '__main__':
 
     
     downloader = DataEngine()
-    downloader.download_new_data(C.ALL_TICKERS)
 
-    # # downloader.save_data()
-    downloader.clean_data() 
 
-    downloader.save_data()
+    #------ Load saved data
+    downloader.load_saved_data()
+
+    #------ Downloading new Data
+
+    # downloader.download_new_data(C.ALL_TICKERS)
+    # downloader.download_new_data(C.MARKET_TICKERS)
+    # downloader.clean_data() 
+    
+
+    # downloader.save_data()
 
