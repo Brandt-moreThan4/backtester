@@ -42,7 +42,7 @@ def get_user_inputs():
     # Ticker Input
     tickers_input = st.text_area(
         "Enter tickers separated by commas (e.g., AAPL, MSFT, AMZN, GOOGL, META, TSLA, JPM):",
-        "SPY, BND"
+        "SPY, JPM"
     )
     tickers = [t.strip().upper() for t in tickers_input.split(",") if t.strip()]
     
@@ -86,6 +86,7 @@ def get_user_inputs():
 
 
     # Auto-set dates based on selection
+    # This should also set the end dates. Move all this to a dictionary?
     if date_option == "1D":
         start_date_option = yesterday - dt.timedelta(days=1)
     elif date_option == '3-Month':
@@ -101,21 +102,41 @@ def get_user_inputs():
 
     start_date_option = start_date_option.date()
 
-    start_date = st.date_input("Start Date", start_date_option)
+    start_date = st.date_input("Start Date (Assumes you invest at close of this date):", start_date_option)
     
-    end_date = st.date_input("End Date", yesterday)
+    end_date = st.date_input("End Date (Assumes you liqudidate at close of this date))", yesterday)
 
     if start_date >= end_date:
         st.error("Start date must be before end date.")
         st.stop()
 
+    # Rebalance Frequency Selection
+    st.markdown("#### Rebalancing Options")
+    rebalance_freq = st.selectbox(
+        "Select rebalance frequency:",
+        [
+            "YE - Year end",
+            "YS - Year start",
+            "QS - Quarter start",
+            "QE - Quarter end",
+            "MS - Month start",
+            "ME - Month end",
+            "W - Weekly",
+            "D - Calendar day",
+        ]
+    )
 
-    port_name = st.text_input("Enter a name for your portfolio:", "60/40")
+    # Extract only the alias (e.g., 'B' from 'B - Business day')
+    rebalance_freq = rebalance_freq.split(" - ")[0]
 
-    return tickers, weights, start_date, end_date, port_name
+
+    port_name = st.text_input("Enter a name for your portfolio:", "Port")
+
+    return tickers, weights, start_date, end_date, port_name, rebalance_freq
 
 # Fetch user inputs
-tickers, weights, start_date, end_date, port_name = get_user_inputs()
+tickers, weights, start_date, end_date, port_name, rebalance_freq = get_user_inputs()
+
 
 # ----------------------------
 # Data Loading & Processing
@@ -151,6 +172,7 @@ with st.spinner("Running backtest..."):
         weights=weights,
         start_date=str(start_date),
         end_date=str(end_date),
+        rebal_freq=rebalance_freq,
     )
     backtester.run_backtest()
 
