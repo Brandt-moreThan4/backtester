@@ -16,7 +16,8 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     security_rets_df = data.rets_df[data.rets_df.index > pd.to_datetime(cleaned_inputs.start_date)].loc[:cleaned_inputs.end_date]
     security_rets_df = security_rets_df[cleaned_inputs.tickers]
     all_rets_df = pd.concat([backtest.port_returns, security_rets_df], axis=1)
-
+    security_prices_df = data.adjusted_prices_df[data.adjusted_prices_df.index > pd.to_datetime(cleaned_inputs.start_date)].loc[:cleaned_inputs.end_date]
+    st.write(security_prices_df)
     st.markdown("### Cumulative Returns of Portfolio")
 
     cum_rets_df = (1 + all_rets_df).cumprod() - 1
@@ -38,6 +39,23 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
 
 
     # Returns
+    st.markdown("### Individual Returns")
+    # Add a tab for each of the securities and show a plot of it's indivdiual cumualtive return
+    tabs = st.tabs(cum_rets_df.columns.to_list())
+    for ticker, tab in zip(cum_rets_df.columns, tabs):
+        with tab:
+            fig = px.line(cum_rets_df[ticker], title=f"{ticker} Cumulative Return")
+            fig.update_yaxes(tickformat=".2%",title_text="Cumulative Return")
+            fig.update_xaxes(title_text="Date")
+            st.plotly_chart(fig)
+
+    st.markdown("### Individual Prices")
+
+    # for ticker in cum_rets_df.columns:
+    #     fig = px.line(cum_rets_df[ticker], title=f"{ticker} Cumulative Return")
+    #     fig.update_yaxes(tickformat=".2%",title_text="Cumulative Return")
+    #     fig.update_xaxes(title_text="Date")
+    #     st.plotly_chart(fig)
     
 
     # Prices

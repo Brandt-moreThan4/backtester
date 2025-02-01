@@ -1,5 +1,7 @@
 import pandas as pd
 import yfinance as yf
+import constants as C
+
 DATA_FOLDER = 'data/'
 
 
@@ -25,10 +27,12 @@ class DataEngine:
     def clean_data(self) -> pd.DataFrame:
 
         # Copy the raw data
-        adjusted_prices_df = self.raw_data_df.copy()
+        df = self.raw_data_df.copy()
+
+        self.price_df = df.loc[:, (slice(None), 'Close')]
 
         # We only need the adjusted close price for each stock (which is on the second level of the columns)
-        adjusted_prices_df = adjusted_prices_df.loc[:, (slice(None), 'Adj Close')]
+        adjusted_prices_df = df.loc[:, (slice(None), 'Adj Close')].copy()
 
         # We need to flatten the columns
         adjusted_prices_df.columns = adjusted_prices_df.columns.droplevel(1)
@@ -55,19 +59,29 @@ class DataEngine:
     def save_data(self) -> None:
         self.rets_df.to_csv(f'{DATA_FOLDER}rets_df.csv')
         self.adjusted_prices_df.to_csv(f'{DATA_FOLDER}adjusted_prices_df.csv')
+        self.price_df.to_csv(f'{DATA_FOLDER}price_df.csv')
+                 
 
     @staticmethod
     def load_saved_data() -> "DataEngine":
         dblob = DataEngine()
         dblob.rets_df = pd.read_csv(f'{DATA_FOLDER}rets_df.csv',index_col=0,parse_dates=True)
         dblob.adjusted_prices_df = pd.read_csv(f'{DATA_FOLDER}adjusted_prices_df.csv',index_col=0,parse_dates=True)
+        dblob.price_df = pd.read_csv(f'{DATA_FOLDER}price_df.csv',index_col=0,parse_dates=True)
+
         return dblob
 
 
 
 if __name__ == '__main__':
 
-    tickers = ['AAPL','MSFT','AMZN','GOOGL','META','TSLA','JPM']
-    downloader = DataEngine(tickers)
+
+    
+    downloader = DataEngine()
+    downloader.download_new_data(C.ALL_TICKERS)
+
+    # # downloader.save_data()
+    downloader.clean_data() 
+
     downloader.save_data()
 
