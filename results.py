@@ -12,7 +12,7 @@ import backtester as bt
 def display_results(backtest:bt.Backtester) -> None:
 
 
-    st.markdown("## Results")
+    # st.markdown("## Results")
 
     st.markdown("### Cumulative Returns of Portfolio")
     backtest.cumulative_port_returns

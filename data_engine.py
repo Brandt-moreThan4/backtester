@@ -7,8 +7,7 @@ DATA_FOLDER = 'data/'
 
 class DataEngine:
 
-    def __init__(self,tickers:list[str]) -> None:
-        self.input_tickers = tickers
+    def __init__(self) -> None:
         self.adjusted_prices_df:pd.DataFrame = None
         self.rets_df:pd.DataFrame = None
 
@@ -59,7 +58,7 @@ class DataEngine:
 
     @staticmethod
     def load_saved_data() -> "DataEngine":
-        dblob = DataEngine(tickers=None,download=False)
+        dblob = DataEngine()
         dblob.rets_df = pd.read_csv(f'{DATA_FOLDER}rets_df.csv',index_col=0,parse_dates=True)
         dblob.adjusted_prices_df = pd.read_csv(f'{DATA_FOLDER}adjusted_prices_df.csv',index_col=0,parse_dates=True)
         return dblob
