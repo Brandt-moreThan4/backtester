@@ -1,7 +1,7 @@
 import pandas as pd
 import datetime
 import numpy as np
-import data_download as dd
+import data_engine as dd
 
 
 # General, helper variables that are used later. 
@@ -15,7 +15,7 @@ class Backtester:
 
     def __init__(
         self,
-        data_blob: dd.DataBlob,
+        data_blob: dd.DataEngine,
         tickers: list[str],
         weights: list[float],
         start_date: str,
@@ -151,7 +151,7 @@ class Backtester:
 
 
 if __name__ == '__main__':
-    data = dd.DataBlob.load_saved_data() 
+    data = dd.DataEngine.load_saved_data() 
     bt = Backtester(data_blob=data,tickers=['AAPL','MSFT'],weights=[0.5,0.5],start_date='2010-01-01',end_date='2020-01-01')
     bt.run_backtest()
     print(bt.portfolio_history_df)

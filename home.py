@@ -3,7 +3,7 @@ import streamlit as st
 import plotly.express as px
 import datetime as dt
 
-import data_download as dd
+import data_engine as dd
 import backtester as bt
 
 st.title("Portfolio Backtester")
@@ -26,29 +26,28 @@ st.sidebar.markdown("""
   - [Portfolio History](#portfolio-history)
   - [Portfolio Weights](#portfolio-weights)
 """, unsafe_allow_html=True)
-# ----------------------------
-# User Input Section
-# ----------------------------
+# Initialize session state variables
+if "form_submitted" not in st.session_state:
+    st.session_state.form_submitted = False  # Track form submission
+if "run_backtest" not in st.session_state:
+    st.session_state.run_backtest = False  # Track backtest execution
+if "date_option" not in st.session_state:
+    st.session_state.date_option = "YTD"  # Default date option
+if "start_date" not in st.session_state:
+    st.session_state.start_date = dt.datetime.today().replace(month=1, day=1).date()  # Default YTD start date
 
+# ----------------------------
+# User Input Section with Form
+# ----------------------------
 st.markdown("## User Inputs")
 
-# Option to fetch new data
-fetch_new_data = st.checkbox("Fetch New Data", value=False)
-
-def get_user_inputs():
-    """Fetch user inputs from Streamlit widgets."""
-    
-
+with st.form("user_input_form"):
     # Ticker Input
     tickers_input = st.text_area(
         "Enter tickers separated by commas (e.g., AAPL, MSFT, AMZN, GOOGL, META, TSLA, JPM):",
         "SPY, JPM"
     )
     tickers = [t.strip().upper() for t in tickers_input.split(",") if t.strip()]
-    
-    if not tickers:
-        st.error("Please enter at least one valid ticker.")
-        st.stop()
 
     st.markdown("#### Portfolio Weights")
     # Weights Input
@@ -58,57 +57,36 @@ def get_user_inputs():
         ",".join(map(str, equal_weights))
     )
 
-    try:
-        weights = [float(w.strip()) for w in weights_input.split(",")]
-        if len(weights) != len(tickers):
-            st.error("Number of weights must match number of tickers.")
-            st.stop()
-        if abs(sum(weights) - 1.0) > 0.001:
-            st.error("Weights must sum to 1.")
-            st.stop()
-    except ValueError:
-        st.error("Invalid weights. Please enter numeric values.")
-        st.stop()
-
-    st.markdown("#### Date Range")
-
+    # Date Selection
     today = dt.datetime.today()
     yesterday = today - dt.timedelta(days=1)
     prior_year_end = dt.datetime(today.year - 1, 12, 31)
     one_year_ago = today.replace(year=today.year - 1)
     three_years_ago = today - dt.timedelta(days=3 * 365)
 
-    # Date range selection dropdown
+    # Date range selection dropdown (triggers update in session state)
     date_option = st.selectbox(
         "Select a time range:",
-        ["Custom", "1D", "YTD", "1 Year", "3 Years"]
+        ["Custom", "1D", "YTD", "1 Year", "3 Years"],
+        index=["Custom", "1D", "YTD", "1 Year", "3 Years"].index(st.session_state.date_option)
     )
 
+    # Automatically update session state when date_option is selected
+    if date_option != st.session_state.date_option:
+        st.session_state.date_option = date_option
+        date_dict = {
+            "1D": yesterday - dt.timedelta(days=1),
+            "YTD": prior_year_end,
+            "1 Year": one_year_ago,
+            "3 Years": three_years_ago,
+        }
+        st.session_state.start_date = date_dict.get(date_option, prior_year_end).date()
 
-    # Auto-set dates based on selection
-    # This should also set the end dates. Move all this to a dictionary?
-    if date_option == "1D":
-        start_date_option = yesterday - dt.timedelta(days=1)
-    elif date_option == '3-Month':
-        start_date_option = dt.datetime(today.year, today.month, 1)
-    elif date_option == "YTD":
-        start_date_option = prior_year_end
-    elif date_option == "1 Year":
-        start_date_option = one_year_ago
-    elif date_option == "3 Years":
-        start_date_option = three_years_ago
-    else:
-        start_date_option = prior_year_end
+    # Start date (linked to session state, but still editable)
+    start_date = st.date_input("Start Date (Assumes you invest at close of this date):", st.session_state.start_date)
 
-    start_date_option = start_date_option.date()
-
-    start_date = st.date_input("Start Date (Assumes you invest at close of this date):", start_date_option)
-    
-    end_date = st.date_input("End Date (Assumes you liqudidate at close of this date))", yesterday)
-
-    if start_date >= end_date:
-        st.error("Start date must be before end date.")
-        st.stop()
+    # End Date Selection
+    end_date = st.date_input("End Date (Assumes you liquidate at close of this date):", yesterday)
 
     # Rebalance Frequency Selection
     st.markdown("#### Rebalancing Options")
@@ -125,116 +103,115 @@ def get_user_inputs():
             "D - Calendar day",
         ]
     )
-
-    # Extract only the alias (e.g., 'B' from 'B - Business day')
-    rebalance_freq = rebalance_freq.split(" - ")[0]
-
+    rebalance_freq = rebalance_freq.split(" - ")[0]  # Extract alias
 
     port_name = st.text_input("Enter a name for your portfolio:", "Port")
 
-    return tickers, weights, start_date, end_date, port_name, rebalance_freq
+    # Submit button for the form
+    submitted = st.form_submit_button("Submit")
 
-# Fetch user inputs
-tickers, weights, start_date, end_date, port_name, rebalance_freq = get_user_inputs()
+# If the form is submitted, store values in session state
+if submitted:
+    st.session_state.form_submitted = True
+    st.session_state.tickers = tickers
+    st.session_state.weights = weights_input
+    st.session_state.start_date = start_date  # Use session state value
+    st.session_state.end_date = end_date
+    st.session_state.port_name = port_name
+    st.session_state.rebalance_freq = rebalance_freq
+    st.success("Inputs submitted! Now click 'Run Backtest'.")
+
+# ----------------------------
+# Run Backtest Button
+# ----------------------------
+if st.session_state.form_submitted:
+    if st.button("Run Backtest"):
+        st.session_state.run_backtest = True
 
 
 # ----------------------------
-# Data Loading & Processing
+# Data Processing & Backtest Execution
 # ----------------------------
+if st.session_state.get("run_backtest", False):
+    st.markdown("## Data Processing")
 
-st.markdown("## Data Processing")
-
-# Load market data
-if fetch_new_data:
+    # Load market data
     with st.spinner("Fetching new data..."):
-        data = dd.DataBlob(tickers, download=True)
-else:
-    data = dd.DataBlob.load_saved_data()
+        data = dd.DataEngine(st.session_state.tickers, download=True)
 
-# Ensure selected tickers exist in dataset
-missing_tickers = [t for t in tickers if t not in data.tickers]
-if missing_tickers:
-    st.error(f"Some tickers are missing from data: {', '.join(missing_tickers)}")
-    st.stop()
+    # Ensure selected tickers exist in dataset
+    missing_tickers = [t for t in st.session_state.tickers if t not in data.tickers]
+    if missing_tickers:
+        st.error(f"Some tickers are missing from data: {', '.join(missing_tickers)}")
+        st.stop()
 
-# Filter returns dataframe to selected tickers
-data.rets_df = data.rets_df[tickers].copy()
+    # Filter returns dataframe to selected tickers
+    data.rets_df = data.rets_df[st.session_state.tickers].copy()
 
-# ----------------------------
-# Backtest Execution
-# ----------------------------
+    # ----------------------------
+    # Backtest Execution
+    # ----------------------------
 
+    st.markdown("## Backtest Execution")
 
-with st.spinner("Running backtest..."):
-    backtester = bt.Backtester(
-        data_blob=data,
-        tickers=tickers,
-        weights=weights,
-        start_date=str(start_date),
-        end_date=str(end_date),
-        rebal_freq=rebalance_freq,
-    )
-    backtester.run_backtest()
+    with st.spinner("Running backtest..."):
+        backtester = bt.Backtester(
+            data_blob=data,
+            tickers=st.session_state.tickers,
+            weights=[float(w) for w in st.session_state.weights.split(",")],
+            start_date=str(st.session_state.start_date),
+            end_date=str(st.session_state.end_date),
+            rebal_freq=st.session_state.rebalance_freq,
+        )
+        backtester.run_backtest()
 
-# ----------------------------
-# Data Visualization
-# ----------------------------
+    # ----------------------------
+    # Data Visualization
+    # ----------------------------
 
-st.markdown("## Results")
+    st.markdown("## Results")
 
+    # Cumulative Portfolio Returns
+    st.subheader("Cumulative Returns")
 
+    stock_rets = data.rets_df.loc[st.session_state.start_date:st.session_state.end_date].fillna(0)
+    cumulative_rets = (1 + stock_rets).cumprod() - 1
+    combo_cum_df = pd.concat([backtester.wealth_index - 1, cumulative_rets], axis=1).dropna()
+    combo_cum_df = combo_cum_df.rename(columns={0: "Portfolio"})
 
-# Cumulative Portfolio Returns
-st.subheader("Cumulative Returns")
+    # Plot the cumulative return with the y-axis as a percentage
+    fig1 = px.line(combo_cum_df, title="Cumulative Returns")
+    fig1.update_yaxes(tickformat=".2%")
 
-stock_rets = data.rets_df.loc[start_date:end_date].fillna(0) # This start date might be 1 day early
-cumulative_rets = (1 + stock_rets).cumprod() - 1
-combo_cum_df = pd.concat([backtester.wealth_index - 1, cumulative_rets], axis=1).dropna()
-combo_cum_df = combo_cum_df.rename(columns={0: "Portfolio"})
+    st.plotly_chart(fig1)
 
-# Plot the cumulative return with the y axis as a percentage
-fig1 = px.line(combo_cum_df, title="Cumulative Returns")
-fig1.update_yaxes(tickformat=".2%")
+    # Portfolio Weights Over Time
+    st.subheader("Portfolio Weights Over Time")
 
-st.plotly_chart(fig1)
+    fig2 = px.line(backtester.weights_df, title="Portfolio Weights")
+    st.plotly_chart(fig2)
 
-# Add a table of cumulative returns (# How to make below prettier?) At very least it shoudl be a heat map
-total_rets = (combo_cum_df.iloc[-1]*100).sort_values(ascending=False)
-total_rets = pd.Series([f"{x:.2f}%" for x in total_rets], index=total_rets.index,name='Total Returns')
-st.write(total_rets)
+    # ----------------------------
+    # Display Data Summary
+    # ----------------------------
 
-# Portfolio Weights Over Time
-st.subheader("Portfolio Weights Over Time")
+    st.markdown("## Raw Data Reference")
 
-fig2 = px.line(backtester.weights_df, title="Portfolio Weights")
-st.plotly_chart(fig2)
+    st.markdown("### Rebalance Dates")
+    dates = backtester.rebalance_dates
+    dates.name = 'Rebalance Dates'
+    dates = pd.Series(dates.date, name='Rebalance Dates')
+    st.write(dates)
 
-# ----------------------------
-# Display Data Summary
-# ----------------------------
+    st.markdown("### Individual Returns")
+    st.write("Head:")
+    st.write(data.rets_df.head())
+    st.write("Tail:")
+    st.write(data.rets_df.tail())
+    st.write(data.rets_df)
 
+    st.markdown("### Portfolio History")
+    st.write(backtester.portfolio_history_df)
 
-
-
-
-st.markdown('## Raw Data Reference')
-
-st.markdown('### Rebalance Dates')
-dates = backtester.rebalance_dates
-dates.name = 'Rebalance Dates'
-# show as date only, not datetime
-dates = pd.Series(dates.date,name='Rebalance Dates')
-st.write(dates)
-
-st.markdown('### Indvidual Returns')
-st.write("Head:")
-st.write(data.rets_df.head())
-st.write("Tail:")
-st.write(data.rets_df.tail())
-st.write(data.rets_df)
-
-st.markdown('### Portfolio History')
-st.write(backtester.portfolio_history_df)
-
-st.markdown('### Portfolio Weights')
-st.write(backtester.weights_df)
+    st.markdown("### Portfolio Weights")
+    st.write(backtester.weights_df)

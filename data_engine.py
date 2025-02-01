@@ -3,25 +3,25 @@ import yfinance as yf
 DATA_FOLDER = 'data/'
 
 
+# Later I need to implement some better caching mechanisms to avoid downloading the same data over and over again
 
-class DataBlob:
+class DataEngine:
 
-    def __init__(self,tickers:list[str],download:bool=True) -> None:
+    def __init__(self,tickers:list[str]) -> None:
         self.input_tickers = tickers
         self.adjusted_prices_df:pd.DataFrame = None
         self.rets_df:pd.DataFrame = None
 
-        if download:
-            self.download_data()
-            self.clean_data()
 
-    def download_data(self) -> pd.DataFrame:
+    def download_new_data(self,tickers:list[str]) -> pd.DataFrame:
 
         # Auto adjust = false so we get both close price and adjusted close price
         # Set Actions = True if you want to grab dividen and split data as well
         
-        self.raw_data_df = yf.download(self.input_tickers, group_by='ticker',auto_adjust=False,actions=False)
-        return self.raw_data_df
+        self.raw_data_df = yf.download(tickers, group_by='ticker',auto_adjust=False,actions=False)
+        self.clean_data()
+        
+        return self.rets_df
     
     def clean_data(self) -> pd.DataFrame:
 
@@ -58,8 +58,8 @@ class DataBlob:
         self.adjusted_prices_df.to_csv(f'{DATA_FOLDER}adjusted_prices_df.csv')
 
     @staticmethod
-    def load_saved_data() -> "DataBlob":
-        dblob = DataBlob(tickers=None,download=False)
+    def load_saved_data() -> "DataEngine":
+        dblob = DataEngine(tickers=None,download=False)
         dblob.rets_df = pd.read_csv(f'{DATA_FOLDER}rets_df.csv',index_col=0,parse_dates=True)
         dblob.adjusted_prices_df = pd.read_csv(f'{DATA_FOLDER}adjusted_prices_df.csv',index_col=0,parse_dates=True)
         return dblob
@@ -69,6 +69,6 @@ class DataBlob:
 if __name__ == '__main__':
 
     tickers = ['AAPL','MSFT','AMZN','GOOGL','META','TSLA','JPM']
-    downloader = DataBlob(tickers)
+    downloader = DataEngine(tickers)
     downloader.save_data()
 
