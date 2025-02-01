@@ -36,17 +36,22 @@ st.sidebar.markdown("""
 cleaned_inputs = inputs.get_user_inputs()
 
 
+# Button some presses to run the data collection and backtest process.
+run_backtest = st.button("Run Backtest")
 
 # ----------------------------
-# Fetch Market Data
+# Fetch Market Data & Validate against Inputs
 # ----------------------------
-with st.spinner("Fetching new data..."):
+
+with st.spinner("Fetching data..."):
     data = dd.DataEngine()
-    data = dd.DataEngine.load_saved_data()
+    if cleaned_inputs.fetch_new_data:
+        data.download_new_data(cleaned_inputs.tickers)
+        # data.save_data()
+    else:
+        data = dd.DataEngine.load_saved_data()
 
-# ----------------------------
-# Data Validation
-# ----------------------------
+# Validate we have the data to run a backtest
 
 # Ensure selected tickers exist in dataset
 missing_tickers = [t for t in cleaned_inputs.tickers if t not in data.tickers]
@@ -61,10 +66,9 @@ data.rets_df = data.rets_df[cleaned_inputs.tickers].copy()
 # Run Backtest
 # ----------------------------
 
-run_backtest = st.button("Run Backtest")
-
-if not run_backtest:
-    st.stop()
+# Need to uncomment out below in a bit
+# if not run_backtest:
+#     st.stop()
 
 
 # ----------------------------
@@ -90,4 +94,4 @@ with st.spinner("Running backtest..."):
 st.markdown("---")
 st.markdown("## Results")
 
-rs.display_results(backtester)
+rs.display_results(backtester, data, cleaned_inputs)

@@ -136,7 +136,7 @@ class Backtester:
     def calculate_data(self) -> None:
         '''Calculate some useful data based on the portfolio history which is nice to have when analyzing results.'''
         
-        self.total_port_values = self.portfolio_history_df.sum(axis=1).astype(float)
+        self.total_port_values = self.portfolio_history_df.sum(axis=1).astype(float).rename(self.port_name)
         self.weights_df = (self.portfolio_history_df.div(self.total_port_values,axis=0)).astype(float)
         self.wealth_index = self.total_port_values / self.total_port_values.iloc[0]
 
@@ -144,12 +144,14 @@ class Backtester:
 
         # Calculate portfolio returns based on the total portfolio values
         self.portfolio_returns_all = self.total_port_values.pct_change().dropna()
-        self.portfolio_returns_all.name = self.short_name
+        # self.portfolio_returns_all.name = self.short_name
 
         # But also calculate a portfolio return that removes days where the portfolio return is 0, because those
         # are with 99.999% certainty just holidays.
         basically_zero_mask = np.abs(self.portfolio_returns_all - 0) < 1e-8
         self.port_returns = self.portfolio_returns_all[~basically_zero_mask].copy()
+
+        ''
 
 
 

@@ -16,6 +16,7 @@ class CleanInputs:
     end_date: dt.datetime
     port_name: str
     rebalance_freq: str
+    fetch_new_data: bool = False
 
 
 def get_user_inputs():
@@ -23,7 +24,12 @@ def get_user_inputs():
 
     st.markdown("## User Inputs")
 
+    # Add a toggle to fetch new date or use old
+    fetch_new_data = st.toggle("Query Updated Data", value=False)
+    st.write("If you want to fetch new data, toggle the switch above... Please be cautious.")
+
     # Ticker Input
+    st.markdown("#### Tickers")
     tickers_input = st.text_area(
         "Enter tickers separated by commas (e.g., AAPL, MSFT, AMZN, GOOGL, META, TSLA, JPM):",
         "SPY, JPM"
@@ -39,6 +45,7 @@ def get_user_inputs():
     )
 
     # Date Selection
+    st.markdown("#### Date Range")
     today = dt.datetime.today()
     yesterday = today - dt.timedelta(days=1)
     prior_year_end = dt.datetime(today.year - 1, 12, 31)
@@ -86,6 +93,6 @@ def get_user_inputs():
 
     port_name = st.text_input("Enter a name for your portfolio:", "Port")
 
-    clean_inputs = CleanInputs(tickers, weights_input, start_date, end_date, port_name, rebalance_freq)
+    clean_inputs = CleanInputs(tickers, weights_input, start_date, end_date, port_name, rebalance_freq,fetch_new_data)
 
     return clean_inputs
