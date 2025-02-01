@@ -27,53 +27,55 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     cumulative_returns_fig.update_xaxes(title_text="Date")
     st.plotly_chart(cumulative_returns_fig)
 
+
+
+    # Portfolio Weights Over Time
+    st.markdown("### Portfolio Weights Over Time")
+    fig2 = px.line(backtest.weights_df)
+    fig2.update_yaxes(tickformat=".2%",title_text="Weight")
+    fig2.update_xaxes(title_text="Date")
+    st.plotly_chart(fig2)
+
+
+    # Returns
+    
+
+    # Prices
+
+
+    # Metrics
+    st.markdown("### Portfolio Metrics")
     # Show the total cumulative return in a table
     total_rets = cum_rets_df.iloc[-1].rename('Total Return').sort_values(ascending=False)
     st.write(total_rets.apply(lambda x: f"{x:.2%}"))
 
 
 
-    # 
-    
 
-    
+    # # ----------------------------
+    # # Display Data Summary
+    # # ----------------------------
 
+    st.markdown("## Raw Data Reference")
 
+    st.markdown("### Rebalance Dates")
+    dates = backtest.rebalance_dates
+    dates.name = 'Rebalance Dates'
+    dates = pd.Series(dates.date, name='Rebalance Dates')
+    st.write(dates)
 
+    st.markdown("### Individual Returns")
+    # st.write("Head:")
+    # st.write(data.rets_df.head())
+    # st.write("Tail:")
+    # st.write(data.rets_df.tail())
+    st.write(all_rets_df)
 
+    st.markdown("### Portfolio History")
+    st.write(backtest.portfolio_history_df)
 
-
-
-# # Portfolio Weights Over Time
-# st.subheader("Portfolio Weights Over Time")
-
-# fig2 = px.line(backtester.weights_df, title="Portfolio Weights")
-# st.plotly_chart(fig2)
-
-# # ----------------------------
-# # Display Data Summary
-# # ----------------------------
-
-# st.markdown("## Raw Data Reference")
-
-# st.markdown("### Rebalance Dates")
-# dates = backtester.rebalance_dates
-# dates.name = 'Rebalance Dates'
-# dates = pd.Series(dates.date, name='Rebalance Dates')
-# st.write(dates)
-
-# st.markdown("### Individual Returns")
-# st.write("Head:")
-# st.write(data.rets_df.head())
-# st.write("Tail:")
-# st.write(data.rets_df.tail())
-# st.write(data.rets_df)
-
-# st.markdown("### Portfolio History")
-# st.write(backtester.portfolio_history_df)
-
-# st.markdown("### Portfolio Weights")
-# st.write(backtester.weights_df)
+    st.markdown("### Port Weights")
+    st.write(backtest.weights_df)
 
 
 if __name__ == '__main__':

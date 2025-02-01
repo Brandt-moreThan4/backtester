@@ -25,7 +25,7 @@ st.sidebar.markdown("""
   - [Rebalance Dates](#rebalance-dates)
   - [Individual Returns](#individual-returns)
   - [Portfolio History](#portfolio-history)
-  - [Portfolio Weights](#portfolio-weights)
+  - [Portfolio Weights](#port-weights)
 """, unsafe_allow_html=True)
 
 
