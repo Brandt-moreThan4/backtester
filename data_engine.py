@@ -21,6 +21,9 @@ class DataEngine:
         # Auto adjust = false so we get both close price and adjusted close price
         # Set Actions = True if you want to grab dividen and split data as well
         
+        # Drop any duplicates, while retaining the order
+        tickers = list(dict.fromkeys(tickers))
+
         self.raw_data_df = yf.download(tickers, group_by='ticker',auto_adjust=False,actions=False)
         self.clean_data()
         

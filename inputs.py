@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 import datetime as dt
+import constants as C
 
 # Add a dataclass to hold the user inputs
 
@@ -16,13 +17,14 @@ class CleanInputs:
     end_date: dt.datetime
     port_name: str
     rebalance_freq: str
+    bench_ticker: str
     fetch_new_data: bool = False
 
 
 def get_user_inputs():
     """Collects user inputs and returns them as variables."""
 
-    st.markdown("## User Inputs")
+    st.markdown("## Inputs")
 
     # Add a toggle to fetch new date or use old
     fetch_new_data = st.toggle("Query Updated Data", value=False)
@@ -33,12 +35,17 @@ def get_user_inputs():
     # ------------------
 
     st.markdown("#### Tickers")
+    default_ticks = ' '.join(C.SECTOR_TICKERS)
     tickers_input = st.text_area(
         "Enter tickers separated by spaces (e.g., AAPL MSFT AMZN GOOGL META TSLA JPM):",
-        "SPY JPM"
+        default_ticks
     )
 
     tickers = [t.strip().upper() for t in tickers_input.split(" ") if t.strip()]
+
+    TICKER_LIMIT = 15
+    if len(tickers) > TICKER_LIMIT:
+        st.error(f'Sorry, for now the maximum tickers allowed is {TICKER_LIMIT}.')
 
     # ------------------
     # Weights Input
@@ -48,7 +55,7 @@ def get_user_inputs():
     equal_weights = [1 / len(tickers) * 100]  * len(tickers)
     equal_weights = [f'{round(w, 2)}' for w in equal_weights]
     equal_weights_str = " ".join(equal_weights)
-    weights_msg = "Enter weights for each ticker (space-separated, as percentagses should sum to 1, e.g, 35 25 40:"
+    weights_msg = "Enter the target weights for each ticker. Defaults to equal-weight. Space-separated. Percentagses. Should sum to 1, e.g, 35 25 40:"
     weights_input = st.text_area(
         weights_msg,
         equal_weights_str
@@ -123,12 +130,35 @@ def get_user_inputs():
             "ME - Month end",
             "W - Weekly",
             "D - Calendar day",
-        ]
+        ],
+        index=3  # Default to "QE - Quarter end"
     )
+
     rebalance_freq = rebalance_freq.split(" - ")[0]  # Extract alias
 
+
+    # ------------------
+    # Benchmark Selection
+    # ------------------
+    st.markdown("#### Benchmark")
+    benchmark = st.selectbox(
+        "Select a benchmark:",
+        ["SPY", "IWM","QQQ","BND"],
+        index=0
+    )
+
+    # ------------------
+    # Portfolio Name
+    # ----------------
     port_name = st.text_input("Enter a name for your portfolio:", "Port")
-
-    clean_inputs = CleanInputs(tickers, weights_input, start_date, end_date, port_name, rebalance_freq,fetch_new_data)
-
+    clean_inputs = CleanInputs(
+        tickers=tickers,
+        weights=weights_input,
+        start_date=start_date,
+        end_date=end_date,
+        port_name=port_name,
+        rebalance_freq=rebalance_freq,
+        bench_ticker=benchmark,
+        fetch_new_data=fetch_new_data
+    )
     return clean_inputs

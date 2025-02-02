@@ -16,7 +16,7 @@ st.markdown(html_title, unsafe_allow_html=True)
 
 st.sidebar.markdown("## Table of Contents")
 st.sidebar.markdown("""
-- [User Inputs](#user-inputs)
+- [Inputs](#inputs)
 - [Data Processing](#data-processing)
 - [Results](#results)
   - [Cumulative Returns](#cumulative-returns-of-portfolio)
@@ -43,24 +43,28 @@ run_backtest = st.button("Run Backtest")
 # Fetch Market Data & Validate against Inputs
 # ----------------------------
 
+needed_tickers = list(dict.fromkeys(cleaned_inputs.tickers + [cleaned_inputs.bench_ticker]))
+
 with st.spinner("Fetching data..."):
     data = dd.DataEngine()
     if cleaned_inputs.fetch_new_data:
-        data.download_new_data(cleaned_inputs.tickers)
+        data.download_new_data(needed_tickers)
         # data.save_data()
     else:
         data = dd.DataEngine.load_saved_data()
 
 # Validate we have the data to run a backtest
 
-# Ensure selected tickers exist in dataset
+# Ensure selected tickers exist in dataset (Should be moved somewhere else???)
 missing_tickers = [t for t in cleaned_inputs.tickers if t not in data.tickers]
 if missing_tickers:
     st.error(f"Some tickers are missing from data: {', '.join(missing_tickers)}")
     st.stop()
 
+
+
 # Filter returns dataframe for only the selected tickers
-data.rets_df = data.rets_df[cleaned_inputs.tickers].copy()
+data.rets_df = data.rets_df[needed_tickers].copy()
 
 # ----------------------------
 # Run Backtest
