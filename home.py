@@ -52,8 +52,8 @@ run_backtest = st.button("Run Backtest")
 needed_tickers = list(dict.fromkeys(cleaned_inputs.tickers + [cleaned_inputs.bench_ticker]))
 
 # Need to uncomment out below in a bit
-# if not run_backtest:
-#     st.stop()
+if not run_backtest:
+    st.stop()
 
 
 with st.spinner("Fetching data..."):
