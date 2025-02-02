@@ -9,6 +9,30 @@ import inputs
 import metrics
 import utils
 
+
+# Utility Functions
+def format_as_percent(df: pd.DataFrame, columns: list) -> pd.DataFrame:
+    """Format specified columns as percentages."""
+    for column in columns:
+        df[column] = df[column].map('{:.2%}'.format)
+    return df
+
+
+def plot_line_chart(df: pd.DataFrame, title: str, yaxis_title: str) -> None:
+    fig = px.line(df, title=title)
+    fig.update_yaxes(tickformat=".2%", title_text=yaxis_title)
+    fig.update_xaxes(title_text="Date")
+    st.plotly_chart(fig)
+
+
+def plot_bar_chart(df: pd.Series, title: str, yaxis_title: str) -> None:
+    fig = px.bar(df, title=title)
+    fig.update_yaxes(tickformat=".2%", title_text=yaxis_title)
+    fig.update_xaxes(title_text="")
+    fig.update_layout(showlegend=False)
+    st.plotly_chart(fig)
+
+
 def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:inputs.CleanInputs) -> None:
 
     start_dt = pd.to_datetime(cleaned_inputs.start_date)
@@ -26,44 +50,27 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
 
     cum_rets_df = (1 + all_rets_df).cumprod() - 1
 
-    # Plot the cumulative return with the y-axis as a percentage and the y labels called "Cumulative Returns"
-    cumulative_returns_fig = px.line(cum_rets_df)
-    cumulative_returns_fig.update_yaxes(tickformat=".2%",title_text="Cumulative Returns")
-    cumulative_returns_fig.update_xaxes(title_text="Date")
-    st.plotly_chart(cumulative_returns_fig)
+    plot_line_chart(cum_rets_df, "Cumulative Returns", "Cumulative Returns")
     
     # Bar plot of total return
     total_rets = cum_rets_df.iloc[-1].sort_values(ascending=False)
-    tot_ret_fig = px.bar(total_rets, title="Total Returns")
-    tot_ret_fig.update_yaxes(tickformat=".2%",title_text="Total Return")
-    # Remove the x-axis title
-    tot_ret_fig.update_xaxes(title_text="")
-    # Remove the legend
-    tot_ret_fig.update_layout(showlegend=False)
-    st.plotly_chart(tot_ret_fig)
+    plot_bar_chart(total_rets, "Total Returns", "Total Return")
 
     # Volatility
-    st.markdown("### Volatility")
-    total_vol = all_rets_df.std() * 252 ** 0.5
     # Display the vol in a bar chart in the same order as the total rets
+    st.markdown("### Volatility")    
+    total_vol = all_rets_df.std() * 252 ** 0.5
+
     total_vol = total_vol[total_rets.index]
-    vol_fig = px.bar(total_vol, title="Total Period Annualized Volatility")
-    vol_fig.update_yaxes(tickformat=".2%",title_text="Volatility")
-    # Remove the x-axis title
-    vol_fig.update_xaxes(title_text="")
-    # Remove the legend
-    vol_fig.update_layout(showlegend=False)
-    st.plotly_chart(vol_fig)
+    plot_bar_chart(total_vol, "Total Period Annualized Volatility", "Volatility")
 
     # If you have enough data, plot the rolling vol
     ROLLING_WINDOW = 252
     if len(all_rets_df) > ROLLING_WINDOW:
-            
+    
         rolling_vols = all_rets_df.rolling(window=252).std() * 252 ** 0.5
         rolling_vols = rolling_vols.dropna()
-        vol_fig = px.line(rolling_vols, title='Rolling 1-Year Volatility')
-        vol_fig.update_yaxes(tickformat=".2%",title_text="Volatility")
-        st.plotly_chart(vol_fig) 
+        plot_line_chart(rolling_vols, "Rolling 1-Year Volatility", "Volatility")
 
     # Metrics
 
@@ -82,7 +89,6 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     metrics_pretty_df['Up Capture'] = metrics_pretty_df['Up Capture'].map('{:.2f}'.format)
     metrics_pretty_df['Down Capture'] = metrics_pretty_df['Down Capture'].map('{:.2f}'.format)
 
-
     st.write(metrics_pretty_df)
 
 
@@ -91,10 +97,6 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     # ----------------------------
     st.markdown("### Correlation Matrix")
     corr = all_rets_df.corr()
-    # # Make the diagonals nulls so they don't influence the heatmap
-    # fig = px.imshow(corr, title="Correlation Matrix", width=800, height=800)
-    # st.plotly_chart(fig)
-    # Show the correlation matrix values
     corr_pretty_df = corr.copy()
     corr_pretty_df = corr_pretty_df.applymap('{:.2f}'.format)
     corr_pretty_df = corr.style.format("{:.2f}").background_gradient(cmap='coolwarm', vmin=-1, vmax=1)
@@ -103,11 +105,7 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
 
     # Portfolio Weights Over Time
     st.markdown("### Portfolio Weights Over Time")
-    fig2 = px.line(backtest.weights_df)
-    # fig2.update_yaxes(tickformat=".2%", title_text="Weight", range=[0, 1]) 
-    fig2.update_yaxes(tickformat=".2%", title_text="Weight")    
-    fig2.update_xaxes(title_text="Date")
-    st.plotly_chart(fig2)
+    plot_line_chart(backtest.weights_df, "Portfolio Weights Over Time", "Weight")
 
 
     # Returns
@@ -116,14 +114,13 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     ret_tabs = st.tabs(cum_rets_df.columns.to_list())
     for ticker, tab in zip(cum_rets_df.columns, ret_tabs):
         with tab:
-            fig = px.line(cum_rets_df[ticker], title=f"{ticker} Cumulative Return")
-            fig.update_yaxes(tickformat=".2%",title_text="Cumulative Return")
-            fig.update_xaxes(title_text="Date")
-            st.plotly_chart(fig)
-
-            # Add on another bar chart that shows the return on different time periods.
             total_ret = cum_rets_df[ticker].iloc[-1]
             st.write(f"Total Return: {total_ret:.2%}")
+            plot_line_chart(cum_rets_df[ticker], f"{ticker} Cumulative Return", "Cumulative Return")
+
+            # Add on another bar chart that shows the return on different time periods.
+
+
 
     st.markdown("### Individual Prices")
     st.write('_Prices are not adjusted for splits or dividends_')
@@ -131,7 +128,8 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     for ticker, tab in zip(security_prices_df.columns, price_tabs):
         with tab:
             fig = px.line(security_prices_df[ticker], title=f"{ticker} Prices")
-            fig.update_yaxes(title_text="Price")
+            # Format in dollars
+            fig.update_yaxes(title_text="Price", tickprefix="$")
             fig.update_xaxes(title_text="Date")
             st.plotly_chart(fig)
 
