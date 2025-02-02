@@ -50,39 +50,49 @@ run_backtest = st.button("Run Backtest")
 
 needed_tickers = list(dict.fromkeys(cleaned_inputs.tickers + [cleaned_inputs.bench_ticker]))
 
-with st.spinner("Fetching data..."):
-    data = dd.DataEngine()
-    if cleaned_inputs.fetch_new_data:
-        data.download_new_data(needed_tickers)
-        # data.save_data()
-    else:
-        data = dd.DataEngine.load_saved_data()
-
-# Validate we have the data to run a backtest
-
-# Ensure selected tickers exist in dataset (Should be moved somewhere else???)
-missing_tickers = [t for t in cleaned_inputs.tickers if t not in data.tickers]
-if missing_tickers:
-    st.error(f"Some tickers are missing from data: {', '.join(missing_tickers)}")
-    st.stop()
-
-
-
-# Filter returns dataframe for only the selected tickers
-data.rets_df = data.rets_df[needed_tickers].copy()
-
-# ----------------------------
-# Run Backtest
-# ----------------------------
-
 # Need to uncomment out below in a bit
 # if not run_backtest:
 #     st.stop()
 
 
+with st.spinner("Fetching data..."):
+    data = dd.DataEngine()
+    if cleaned_inputs.fetch_new_data:
+        data.download_new_data(needed_tickers)
+        # Should find a way to save new data or cache it somehow
+    else:
+        data = dd.DataEngine.load_saved_data()
+
+# Validate we have the data to run a backtest
+# Ensure selected tickers exist in dataset (Should be moved somewhere else???)
+missing_tickers = [t for t in cleaned_inputs.tickers if t not in data.tickers]
+if missing_tickers:
+    error_msg = f"""Missing data for some tickers. Sorry...
+\n Missing tickers: {missing_tickers}"""
+    st.error(error_msg)
+    st.stop()
+
+
+# Filter returns dataframe for only the selected tickers
+data.rets_df = data.rets_df[needed_tickers].copy()
+
+
+
+# Check that we have returns for all tickers for the entire backtest period
+missing_returns = data.rets_df.loc[cleaned_inputs.start_date:cleaned_inputs.end_date].isnull().sum()
+if missing_returns.any():
+    error_msg = f"""Missing returns for some tickers during the backtest period. Sorry... 
+\n Problem tickers: {missing_returns[missing_returns > 0].index.tolist()}"""
+    st.error(error_msg)
+    st.stop()
+
+
 # ----------------------------
-# Backtest Execution
+# Run Backtest
 # ----------------------------
+
+
+
 
 with st.spinner("Running backtest..."):
     backtester = bt.Backtester(

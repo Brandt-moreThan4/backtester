@@ -86,11 +86,14 @@ def get_user_inputs():
     prior_year_end = dt.datetime(today.year - 1, 12, 31)
     one_year_ago = yesterday.replace(year=today.year - 1) - dt.timedelta(days=1)
     three_years_ago = yesterday.replace(year=today.year - 3) - dt.timedelta(days=1)
+    five_years_ago = yesterday.replace(year=today.year - 5) - dt.timedelta(days=1)
+    ten_years_ago = yesterday.replace(year=today.year - 10) - dt.timedelta(days=1)
+    fifteen_years_ago = yesterday.replace(year=today.year - 15) - dt.timedelta(days=1)
 
     # Date range selection dropdown
     date_option = st.selectbox(
         "Select a time range (assists in picking start date):",
-        ["Custom", "1D", "YTD", "1 Year", "3 Years"],
+        ["Custom", "1D", "YTD", "1 Year", "3 Years", "5 Years", "10 Years", "15 Years"],
         index=2,  # Default to "YTD"
     )
 
@@ -100,6 +103,9 @@ def get_user_inputs():
         "YTD": prior_year_end,
         "1 Year": one_year_ago,
         "3 Years": three_years_ago,
+        "5 Years": five_years_ago,
+        "10 Years": ten_years_ago,
+        "15 Years": fifteen_years_ago,
     }
 
 
