@@ -17,16 +17,20 @@ st.markdown(html_title, unsafe_allow_html=True)
 st.sidebar.markdown("## Table of Contents")
 st.sidebar.markdown("""
 - [Inputs](#inputs)
-- [Data Processing](#data-processing)
 - [Results](#results)
-  - [Cumulative Returns](#cumulative-returns-of-portfolio)
-  - [Portfolio Weights](#portfolio-weights-over-time)
-- [Raw Data Reference](#raw-data-reference)
-  - [Rebalance Dates](#rebalance-dates)
+  - [Cumulative Returns](#cumulative-returns)
+  - [Portfolio Weights Over Time](#portfolio-weights-over-time)
   - [Individual Returns](#individual-returns)
+  - [Individual Prices](#individual-prices)
+  - [Performance Metrics](#performance-metrics)
+- [Raw Data Reference](#raw-data-reference)
+  - [Raw Returns](#raw-returns)
+  - [Rebalance Dates](#rebalance-dates)
   - [Portfolio History](#portfolio-history)
-  - [Portfolio Weights](#port-weights)
+  - [Raw Port Weights](#raw-portfolio-weights)
 """, unsafe_allow_html=True)
+
+
 
 
 # ----------------------------

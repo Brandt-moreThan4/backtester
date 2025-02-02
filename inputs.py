@@ -46,6 +46,7 @@ def get_user_inputs():
     TICKER_LIMIT = 15
     if len(tickers) > TICKER_LIMIT:
         st.error(f'Sorry, for now the maximum tickers allowed is {TICKER_LIMIT}.')
+        st.stop()
 
     # ------------------
     # Weights Input
