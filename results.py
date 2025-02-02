@@ -82,9 +82,24 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     metrics_pretty_df['Up Capture'] = metrics_pretty_df['Up Capture'].map('{:.2f}'.format)
     metrics_pretty_df['Down Capture'] = metrics_pretty_df['Down Capture'].map('{:.2f}'.format)
 
-    # Apply heat map to CAGR column
 
     st.write(metrics_pretty_df)
+
+
+    # ----------------------------
+    # Correlation Matrix
+    # ----------------------------
+    st.markdown("### Correlation Matrix")
+    corr = all_rets_df.corr()
+    # # Make the diagonals nulls so they don't influence the heatmap
+    # fig = px.imshow(corr, title="Correlation Matrix", width=800, height=800)
+    # st.plotly_chart(fig)
+    # Show the correlation matrix values
+    corr_pretty_df = corr.copy()
+    corr_pretty_df = corr_pretty_df.applymap('{:.2f}'.format)
+    corr_pretty_df = corr.style.format("{:.2f}").background_gradient(cmap='coolwarm', vmin=-1, vmax=1)
+    st.write(corr_pretty_df)
+
 
     # Portfolio Weights Over Time
     st.markdown("### Portfolio Weights Over Time")
