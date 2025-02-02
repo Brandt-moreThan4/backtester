@@ -82,6 +82,7 @@ def get_user_inputs():
     st.markdown("#### Date Range")
     today = dt.datetime.today()
     yesterday = today - dt.timedelta(days=1)
+    day_before_yesterday = today - dt.timedelta(days=2)
     prior_year_end = dt.datetime(today.year - 1, 12, 31)
     one_year_ago = yesterday.replace(year=today.year - 1) - dt.timedelta(days=1)
     three_years_ago = yesterday.replace(year=today.year - 3) - dt.timedelta(days=1)
@@ -95,7 +96,7 @@ def get_user_inputs():
 
     # Automatically update start date based on selection
     date_dict = {
-        "1D": yesterday - dt.timedelta(days=1),
+        "1D": day_before_yesterday,
         "YTD": prior_year_end,
         "1 Year": one_year_ago,
         "3 Years": three_years_ago,
@@ -104,8 +105,8 @@ def get_user_inputs():
 
     start_date_default = date_dict.get(date_option,None)
     if start_date_default is None:
-        # If the default is none, put whatever the last date is
-        start_date_default = yesterday
+        # If the default is none, 
+        start_date_default = day_before_yesterday
 
     # Start date (users can override)
     start_date = st.date_input("Start Date (Assumes you invest at close of this date):", start_date_default)

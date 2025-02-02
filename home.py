@@ -19,6 +19,7 @@ st.sidebar.markdown("""
 - [Inputs](#inputs)
 - [Results](#results)
   - [Cumulative Returns](#cumulative-returns)
+  - [Volatility](#volatility)                    
   - [Portfolio Weights Over Time](#portfolio-weights-over-time)
   - [Individual Returns](#individual-returns)
   - [Individual Prices](#individual-prices)
