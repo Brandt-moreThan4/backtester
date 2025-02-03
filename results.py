@@ -78,7 +78,7 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     metrics_df = all_rets_df.apply(metrics.calculate_metrics, args=(bench_rets,),axis=0)
     # We want to apply lots of fun formatting to the metrics
     metrics_pretty_df = metrics_df.T.copy()
-    COLS_TO_PRETTIFY = ['Total Return', 'CAGR', 'Volatility', 'Max Drawdown', 'Sharpe', 'Alpha', 'Beta', 'Downside Deviation', 'Up Capture', 'Down Capture']
+    COLS_TO_PRETTIFY = ['Total Return', 'CAGR', 'Volatility', 'Max Drawdown', 'Alpha', 'Downside Deviation']
     metrics_pretty_df = format_as_percent(metrics_pretty_df, COLS_TO_PRETTIFY)
 
     st.write(metrics_pretty_df)

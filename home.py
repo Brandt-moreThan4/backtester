@@ -18,7 +18,7 @@ st.sidebar.markdown("## Table of Contents")
 st.sidebar.markdown("""
 - [Inputs](#inputs)
 - [Results](#results)
-  - [Cumulative Returns](#cumulative-returns)
+  - [Cumulative Returns](#cumulative-returns-of-portfolio)
   - [Volatility](#volatility)    
   - [Performance Metrics](#performance-metrics)                
   - [Correlation Matrix](#correlation-matrix)                                        
@@ -26,8 +26,8 @@ st.sidebar.markdown("""
   - [Individual Returns](#individual-returns)
   - [Individual Prices](#individual-prices)
 - [Raw Data Reference](#raw-data-reference)
+  - [Rebalance Dates](#rebalance-dates)                    
   - [Raw Returns](#raw-returns)
-  - [Rebalance Dates](#rebalance-dates)
   - [Portfolio History](#portfolio-history)
   - [Raw Port Weights](#raw-portfolio-weights)
 """, unsafe_allow_html=True)
@@ -41,9 +41,8 @@ st.sidebar.markdown("""
 
 cleaned_inputs = inputs.get_user_inputs()
 
+# run_backtest = st.button("Run Backtest")
 
-# Button some presses to run the data collection and backtest process.
-run_backtest = st.button("Run Backtest")
 
 # ----------------------------
 # Fetch Market Data & Validate against Inputs
