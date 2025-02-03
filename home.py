@@ -51,6 +51,7 @@ run_backtest = st.button("Run Backtest")
 
 needed_tickers = list(dict.fromkeys(cleaned_inputs.tickers + [cleaned_inputs.bench_ticker]))
 
+
 # Need to uncomment out below in a bit
 # if not run_backtest:
 #     st.stop()
@@ -68,7 +69,7 @@ with st.spinner("Fetching data..."):
 # Ensure selected tickers exist in dataset (Should be moved somewhere else???)
 missing_tickers = [t for t in cleaned_inputs.tickers if t not in data.tickers]
 if missing_tickers:
-    error_msg = f"""Missing data for some tickers. Sorry...
+    error_msg = f"""Missing data for some tickers. Sorry... If you want to fetch new data, toggle the buttom
 \n Missing tickers: {missing_tickers}"""
     st.error(error_msg)
     st.stop()
@@ -88,12 +89,10 @@ if missing_returns.any():
     st.stop()
 
 
+
 # ----------------------------
 # Run Backtest
 # ----------------------------
-
-
-
 
 with st.spinner("Running backtest..."):
     backtester = bt.Backtester(

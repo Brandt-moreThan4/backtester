@@ -37,10 +37,6 @@ def get_user_inputs():
 
     st.markdown("## Inputs")
 
-    # Add a toggle to fetch new date or use old
-    fetch_new_data = st.toggle("Query Updated Data", value=False)
-    st.write("If you want to fetch new data, toggle the switch above... Please be cautious.")
-
     # ------------------
     # Ticker Input
     # ------------------
@@ -169,10 +165,19 @@ def get_user_inputs():
         index=0
     )
 
+
+
     # ------------------
     # Portfolio Name
     # ----------------
     port_name = st.text_input("Enter a name for your portfolio:", "Port")
+    st.markdown('---')
+
+    # Add a toggle to fetch new date or use old
+    fetch_new_data = st.toggle("Query Updated Data", value=False)
+    st.write("If you want to fetch new data, toggle the switch above... Please be cautious.")
+    
+    
     clean_inputs = CleanInputs(
         tickers=tickers,
         weights=weights_input,

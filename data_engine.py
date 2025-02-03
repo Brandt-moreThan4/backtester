@@ -64,18 +64,18 @@ class DataEngine:
     def tickers(self) -> list[str]:
         return self.rets_df.columns.tolist()
     
-    def save_data(self) -> None:
-        self.rets_df.to_csv(f'{DATA_FOLDER}rets_df.csv')
-        self.adjusted_prices_df.to_csv(f'{DATA_FOLDER}adjusted_prices_df.csv')
-        self.price_df.to_csv(f'{DATA_FOLDER}price_df.csv')
+    def save_data(self,folder_path = DATA_FOLDER) -> None:
+        self.rets_df.to_csv(f'{folder_path}rets_df.csv')
+        self.adjusted_prices_df.to_csv(f'{folder_path}adjusted_prices_df.csv')
+        self.price_df.to_csv(f'{folder_path}price_df.csv')
                  
 
     @staticmethod
-    def load_saved_data() -> "DataEngine":
+    def load_saved_data(folder:str=DATA_FOLDER) -> "DataEngine":
         dblob = DataEngine()
-        dblob.rets_df = pd.read_csv(f'{DATA_FOLDER}rets_df.csv',index_col=0,parse_dates=True)
-        dblob.adjusted_prices_df = pd.read_csv(f'{DATA_FOLDER}adjusted_prices_df.csv',index_col=0,parse_dates=True)
-        dblob.price_df = pd.read_csv(f'{DATA_FOLDER}price_df.csv',index_col=0,parse_dates=True)
+        dblob.rets_df = pd.read_csv(f'{folder}rets_df.csv',index_col=0,parse_dates=True)
+        dblob.adjusted_prices_df = pd.read_csv(f'{folder}adjusted_prices_df.csv',index_col=0,parse_dates=True)
+        dblob.price_df = pd.read_csv(f'{folder}price_df.csv',index_col=0,parse_dates=True)
         dblob.price_df.index = pd.to_datetime(dblob.price_df.index)
 
         return dblob
