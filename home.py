@@ -59,11 +59,19 @@ needed_tickers = list(dict.fromkeys(cleaned_inputs.tickers + [cleaned_inputs.ben
 
 with st.spinner("Fetching data..."):
     data = dd.DataEngine()
-    if cleaned_inputs.fetch_new_data:
-        data.download_new_data(needed_tickers)
-        # Should find a way to save new data or cache it somehow
-    else:
-        data = dd.DataEngine.load_saved_data()
+    
+    # Try loading cached data first
+    data.raw_data_df = data.load_local_data(needed_tickers)
+    
+    # May need to review below to fetch data for any new tickers
+    if data.raw_data_df is None or cleaned_inputs.fetch_new_data:
+        # st.warning("Fetching new data from Yahoo Finance. This may take a second...")
+        with st.spinner("Fetching new data from Yahoo Finance. This may take a second..."):
+            data.download_new_data(needed_tickers)
+    
+    # Make sure it's been cleaned
+    data.clean_data()
+
 
 # Validate we have the data to run a backtest
 # Ensure selected tickers exist in dataset (Should be moved somewhere else???)
