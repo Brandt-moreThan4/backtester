@@ -78,19 +78,10 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     metrics_df = all_rets_df.apply(metrics.calculate_metrics, args=(bench_rets,),axis=0)
     # We want to apply lots of fun formatting to the metrics
     metrics_pretty_df = metrics_df.T.copy()
-    metrics_pretty_df['Total Return'] = metrics_pretty_df['Total Return'].map('{:.2%}'.format)
-    metrics_pretty_df['CAGR'] = metrics_pretty_df['CAGR'].map('{:.2%}'.format)
-    metrics_pretty_df['Volatility'] = metrics_pretty_df['Volatility'].map('{:.2%}'.format)
-    metrics_pretty_df['Sharpe'] = metrics_pretty_df['Sharpe'].map('{:.2f}'.format)
-    metrics_pretty_df['Max Drawdown'] = metrics_pretty_df['Max Drawdown'].map('{:.2%}'.format)
-    metrics_pretty_df['Beta'] = metrics_pretty_df['Beta'].map('{:.2f}'.format)
-    metrics_pretty_df['Alpha'] = metrics_pretty_df['Alpha'].map('{:.2%}'.format)
-    metrics_pretty_df['Downside Deviation'] = metrics_pretty_df['Downside Deviation'].map('{:.2%}'.format)
-    metrics_pretty_df['Up Capture'] = metrics_pretty_df['Up Capture'].map('{:.2f}'.format)
-    metrics_pretty_df['Down Capture'] = metrics_pretty_df['Down Capture'].map('{:.2f}'.format)
+    COLS_TO_PRETTIFY = ['Total Return', 'CAGR', 'Volatility', 'Max Drawdown', 'Sharpe', 'Alpha', 'Beta', 'Downside Deviation', 'Up Capture', 'Down Capture']
+    metrics_pretty_df = format_as_percent(metrics_pretty_df, COLS_TO_PRETTIFY)
 
     st.write(metrics_pretty_df)
-
 
     # ----------------------------
     # Correlation Matrix
@@ -134,13 +125,8 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
             st.plotly_chart(fig)
 
 
- 
-
-
-
-
     # # ----------------------------
-    # # Display Data Summary
+    # # Display Raw Data
     # # ----------------------------
 
     st.markdown("## Raw Data Reference")
@@ -151,14 +137,12 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     dates = pd.Series(dates.date, name='Rebalance Dates')
     st.write(dates)
 
-    def color_returns(val):
-        color = "green" if val > 0 else "red"
-        return f"color: {color}"
+
 
     st.markdown("### Raw Returns")
     rets_df = utils.convert_dt_index(security_rets_df)
     # Format the returns as percentages and color code them. Positive returns are green, negative are red.
-    styled_df = rets_df.style.format("{:.2%}").applymap(color_returns)
+    styled_df = rets_df.style.format("{:.2%}").map(utils.color_returns)
     st.write(styled_df)
 
     st.markdown("### Portfolio History")
@@ -166,7 +150,7 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
 
     st.markdown("### Raw Portfolio Weights")
     weights_df = utils.convert_dt_index(backtest.weights_df)
-    weights_df = weights_df.applymap('{:.2%}'.format)
+    weights_df = weights_df.map('{:.2%}'.format)
     st.write(weights_df)
 
 

@@ -21,6 +21,17 @@ class CleanInputs:
     fetch_new_data: bool = False
 
 
+today = dt.datetime.today()
+yesterday = today - dt.timedelta(days=1)
+day_before_yesterday = today - dt.timedelta(days=2)
+prior_year_end = dt.datetime(today.year - 1, 12, 31)
+one_year_ago = yesterday.replace(year=today.year - 1) - dt.timedelta(days=1)
+three_years_ago = yesterday.replace(year=today.year - 3) - dt.timedelta(days=1)
+five_years_ago = yesterday.replace(year=today.year - 5) - dt.timedelta(days=1)
+ten_years_ago = yesterday.replace(year=today.year - 10) - dt.timedelta(days=1)
+fifteen_years_ago = yesterday.replace(year=today.year - 15) - dt.timedelta(days=1)
+
+
 def get_user_inputs():
     """Collects user inputs and returns them as variables."""
 
@@ -43,10 +54,15 @@ def get_user_inputs():
 
     tickers = [t.strip().upper() for t in tickers_input.split(" ") if t.strip()]
 
-    TICKER_LIMIT = 15
+    TICKER_LIMIT = 50
     if len(tickers) > TICKER_LIMIT:
-        st.error(f'Sorry, for now the maximum tickers allowed is {TICKER_LIMIT}.')
+        st.error(f'Sorry, for now the maximum tickers allowed is {TICKER_LIMIT}. Because I am worried about abusing the API. ')
         st.stop()
+
+    # Raise error if there are duplicates
+    if len(tickers) != len(set(tickers)):
+        dups = set([ticker for ticker in tickers if tickers.count(ticker) > 1])
+        st.error(f"Duplicate tickers found. Please remove: {dups}")
 
     # ------------------
     # Weights Input
@@ -62,7 +78,14 @@ def get_user_inputs():
         equal_weights_str
     )
 
-    weights_input = [float(w)/100 for w in weights_input.split(" ")]
+    weights_input = weights_input.split(" ")
+    # Make sure the number of weights matches the number of tickers
+    if len(weights_input) != len(tickers):
+        st.error(f"Number of weights does not match number of tickers. Please provide a weight for each ticker.")
+        st.stop()
+
+    # Convert to floats
+    weights_input = [float(w)/100 for w in weights_input]
 
     # Validat that weights are closish to 1
 
@@ -80,15 +103,6 @@ def get_user_inputs():
     # ------------------
 
     st.markdown("#### Date Range")
-    today = dt.datetime.today()
-    yesterday = today - dt.timedelta(days=1)
-    day_before_yesterday = today - dt.timedelta(days=2)
-    prior_year_end = dt.datetime(today.year - 1, 12, 31)
-    one_year_ago = yesterday.replace(year=today.year - 1) - dt.timedelta(days=1)
-    three_years_ago = yesterday.replace(year=today.year - 3) - dt.timedelta(days=1)
-    five_years_ago = yesterday.replace(year=today.year - 5) - dt.timedelta(days=1)
-    ten_years_ago = yesterday.replace(year=today.year - 10) - dt.timedelta(days=1)
-    fifteen_years_ago = yesterday.replace(year=today.year - 15) - dt.timedelta(days=1)
 
     # Date range selection dropdown
     date_option = st.selectbox(
