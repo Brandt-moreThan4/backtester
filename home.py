@@ -28,7 +28,6 @@ st.sidebar.markdown("""
 - [Raw Data Reference](#raw-data-reference)
   - [Rebalance Dates](#rebalance-dates)                    
   - [Raw Returns](#raw-returns)
-  - [Portfolio History](#portfolio-history)
   - [Raw Port Weights](#raw-portfolio-weights)
 """, unsafe_allow_html=True)
 

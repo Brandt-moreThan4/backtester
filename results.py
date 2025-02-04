@@ -46,7 +46,7 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
 
     bench_rets = rets_filered_df[cleaned_inputs.bench_ticker]
 
-    st.markdown("### Cumulative Returns of Portfolio")
+    st.markdown("### Cumulative Returns")
 
     cum_rets_df = (1 + all_rets_df).cumprod() - 1
 
@@ -72,7 +72,9 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
         rolling_vols = rolling_vols.dropna()
         plot_line_chart(rolling_vols, "Rolling 1-Year Volatility", "Volatility")
 
+    #---------------------------
     # Metrics
+    #---------------------------
 
     st.markdown("### Performance Metrics")    
     metrics_df = all_rets_df.apply(metrics.calculate_metrics, args=(bench_rets,),axis=0)
@@ -80,6 +82,9 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     metrics_pretty_df = metrics_df.T.copy()
     COLS_TO_PRETTIFY = ['Total Return', 'CAGR', 'Volatility', 'Max Drawdown', 'Alpha', 'Downside Deviation']
     metrics_pretty_df = format_as_percent(metrics_pretty_df, COLS_TO_PRETTIFY)
+    # Format the following columns to onlu 2 decimal places
+    DECIMAL_COLS = ['Beta', 'Sharpe', 'Up Capture', 'Down Capture']
+    metrics_pretty_df[DECIMAL_COLS] = metrics_pretty_df[DECIMAL_COLS].applymap('{:.2f}'.format)
 
     st.write(metrics_pretty_df)
 
@@ -114,7 +119,7 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
 
 
     st.markdown("### Individual Prices")
-    st.write('_Prices are not adjusted for splits or dividends_')
+    st.write('_These prices are not adjusted for splits or dividends_')
     price_tabs = st.tabs(security_prices_df.columns.to_list())
     for ticker, tab in zip(security_prices_df.columns, price_tabs):
         with tab:
@@ -140,13 +145,13 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
 
 
     st.markdown("### Raw Returns")
-    rets_df = utils.convert_dt_index(security_rets_df)
+    rets_df = utils.convert_dt_index(all_rets_df)
     # Format the returns as percentages and color code them. Positive returns are green, negative are red.
     styled_df = rets_df.style.format("{:.2%}").map(utils.color_returns)
     st.write(styled_df)
 
-    st.markdown("### Portfolio History")
-    st.write(utils.convert_dt_index(backtest.portfolio_history_df))
+    # st.markdown("### Portfolio History")
+    # st.write(utils.convert_dt_index(backtest.portfolio_history_df))
 
     st.markdown("### Raw Portfolio Weights")
     weights_df = utils.convert_dt_index(backtest.weights_df)
