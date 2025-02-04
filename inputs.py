@@ -160,7 +160,7 @@ def get_user_inputs():
     # ------------------
     st.markdown("#### Benchmark")
     benchmark = st.selectbox(
-        "Select a benchmark:",
+        "Select a benchmark (Currently only used for calculation of Beta):",
         ["SPY", "IWM","QQQ","BND"],
         index=0
     )
