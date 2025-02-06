@@ -174,8 +174,8 @@ def get_user_inputs():
     # st.markdown('---')
 
     # Add a toggle to fetch new date or use old
-    # fetch_new_data = st.toggle("Query Updated Data", value=False)
-    # st.write("If you want to fetch new data, toggle the switch above... Please be cautious.")
+    fetch_new_data = st.toggle("Query Updated Data", value=False)
+    st.write("If you want to fetch new data, toggle the switch above... Please be cautious.")
     
     
     clean_inputs = CleanInputs(
@@ -186,6 +186,6 @@ def get_user_inputs():
         port_name=port_name,
         rebalance_freq=rebalance_freq,
         bench_ticker=benchmark,
-        # fetch_new_data=fetch_new_data
+        fetch_new_data=fetch_new_data
     )
     return clean_inputs

@@ -40,6 +40,7 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     # Security returns should be after the start date (non inclusive) and before the end date (inclusive)
     rets_filered_df = data.rets_df[data.rets_df.index > start_dt].loc[:cleaned_inputs.end_date]
     security_rets_df = rets_filered_df[cleaned_inputs.tickers]
+    bench_rets = rets_filered_df[cleaned_inputs.bench_ticker]
     all_rets_df = pd.concat([backtest.port_returns, security_rets_df], axis=1)
     security_prices_df = data.price_df[data.price_df.index > start_dt].loc[:cleaned_inputs.end_date]
     security_prices_df = security_prices_df[cleaned_inputs.tickers]
@@ -55,6 +56,18 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     # Bar plot of total return
     total_rets = cum_rets_df.iloc[-1].sort_values(ascending=False)
     plot_bar_chart(total_rets, "Total Returns", "Total Return")
+
+    # Add on yearly returns, if we have enough data
+    annual_rets = all_rets_df.resample('YE').apply(lambda x: (1 + x).prod() - 1)
+    if len(annual_rets) > 1:
+        st.markdown("### Annual Returns")        
+        annual_rets.index = annual_rets.index.year
+        annual_rets = annual_rets.T
+        # Format these returns as a heatmap each year
+        annual_rets = annual_rets.style.format("{:.2%}").background_gradient(cmap='RdYlGn', axis=1)
+
+
+        st.write(annual_rets)
 
     # Volatility
     # Display the vol in a bar chart in the same order as the total rets
@@ -115,19 +128,6 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     #         plot_line_chart(cum_rets_df[ticker], f"{ticker} Cumulative Return", "Cumulative Return")
 
     #         # Add on another bar chart that shows the return on different time periods.
-
-
-    # Add on yearly returns, if we have enough data
-    annual_rets = all_rets_df.resample('YE').apply(lambda x: (1 + x).prod() - 1)
-    if len(annual_rets) > 1:
-        st.markdown("### Annual Returns")        
-        annual_rets.index = annual_rets.index.year
-        annual_rets = annual_rets.T
-        # Format these returns as a heatmap each year
-        annual_rets = annual_rets.style.format("{:.2%}").background_gradient(cmap='RdYlGn', axis=1)
-
-
-        st.write(annual_rets)
 
 
     st.markdown("### Individual Prices")
