@@ -94,7 +94,7 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     st.markdown("### Correlation Matrix")
     corr = all_rets_df.corr()
     corr_pretty_df = corr.copy()
-    corr_pretty_df = corr_pretty_df.applymap('{:.2f}'.format)
+    # # corr_pretty_df = corr_pretty_df.applymap('{:.2f}'.format)
     corr_pretty_df = corr.style.format("{:.2f}").background_gradient(cmap='coolwarm', vmin=-1, vmax=1)
     st.write(corr_pretty_df)
 
@@ -104,18 +104,30 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     plot_line_chart(backtest.weights_df, "Portfolio Weights Over Time", "Weight")
 
 
-    # Returns
-    st.markdown("### Individual Returns")
-    # Add a tab for each of the securities and show a plot of it's indivdiual cumualtive return
-    ret_tabs = st.tabs(cum_rets_df.columns.to_list())
-    for ticker, tab in zip(cum_rets_df.columns, ret_tabs):
-        with tab:
-            total_ret = cum_rets_df[ticker].iloc[-1]
-            st.write(f"Total Return: {total_ret:.2%}")
-            plot_line_chart(cum_rets_df[ticker], f"{ticker} Cumulative Return", "Cumulative Return")
+    # # Returns
+    # st.markdown("### Individual Returns")
+    # # Add a tab for each of the securities and show a plot of it's indivdiual cumualtive return
+    # ret_tabs = st.tabs(cum_rets_df.columns.to_list())
+    # for ticker, tab in zip(cum_rets_df.columns, ret_tabs):
+    #     with tab:
+    #         total_ret = cum_rets_df[ticker].iloc[-1]
+    #         st.write(f"Total Return: {total_ret:.2%}")
+    #         plot_line_chart(cum_rets_df[ticker], f"{ticker} Cumulative Return", "Cumulative Return")
 
-            # Add on another bar chart that shows the return on different time periods.
+    #         # Add on another bar chart that shows the return on different time periods.
 
+
+    # Add on yearly returns, if we have enough data
+    annual_rets = all_rets_df.resample('YE').apply(lambda x: (1 + x).prod() - 1)
+    if len(annual_rets) > 1:
+        st.markdown("### Annual Returns")        
+        annual_rets.index = annual_rets.index.year
+        annual_rets = annual_rets.T
+        # Format these returns as a heatmap each year
+        annual_rets = annual_rets.style.format("{:.2%}").background_gradient(cmap='RdYlGn', axis=1)
+
+
+        st.write(annual_rets)
 
 
     st.markdown("### Individual Prices")
@@ -129,6 +141,8 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
             fig.update_xaxes(title_text="Date")
             st.plotly_chart(fig)
 
+
+    
 
     # # ----------------------------
     # # Display Raw Data

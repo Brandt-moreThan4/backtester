@@ -2,12 +2,13 @@ import os
 import time
 import pandas as pd
 import yfinance as yf
+import datetime as dt
 import constants as C
 import streamlit as st
 
 # DATA_FOLDER = 'data/'
 DATA_FOLDER = 'temp_data/'
-CACHE_EXPIRATION = 86400  # 1 day
+CACHE_EXPIRATION = 28800  # 8ish hours
 
 class DataEngine:
     def __init__(self) -> None:
@@ -21,7 +22,9 @@ class DataEngine:
         if not os.path.exists(file_path):
             return True
         last_modified = os.path.getmtime(file_path)
-        return (time.time() - last_modified) > CACHE_EXPIRATION
+        # last_modified_date = dt.datetime.fromtimestamp(last_modified).date()
+        # today = dt.datetime.today().date()
+        return (time.time() - last_modified) > CACHE_EXPIRATION 
 
     def load_local_data(self, tickers: list[str]) -> pd.DataFrame:
         """Load data from local storage if available and not expired"""
