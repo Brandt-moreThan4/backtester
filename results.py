@@ -60,7 +60,7 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     # Add on yearly returns, if we have enough data
     annual_rets = all_rets_df.resample('YE').apply(lambda x: (1 + x).prod() - 1)
     if len(annual_rets) > 1:
-        st.markdown("### Annual Returns")        
+        st.markdown("#### Annual Returns")        
         annual_rets.index = annual_rets.index.year
         annual_rets = annual_rets.T
         # Format these returns as a heatmap each year
