@@ -174,8 +174,11 @@ def get_user_inputs():
     # st.markdown('---')
 
     # Add a toggle to fetch new date or use old
-    fetch_new_data = st.toggle("Query Updated Data", value=False)
-    st.write("If you want to fetch new data, toggle the switch above... Please be cautious.")
+    # st.markdown("#### Force Fetch New Data")
+    fetch_new_data = False
+    # st.write("If you need to fetch new data (not using data that is cached), toggle the switch below. You should probably never need to do this.")
+    # fetch_new_data = st.toggle("Query Updated Data", value=False)
+
     
     
     clean_inputs = CleanInputs(

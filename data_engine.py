@@ -26,9 +26,11 @@ class DataEngine:
 
     def load_local_data(self, tickers: list[str]) -> pd.DataFrame:
         """Load data from local storage if available and not expired"""
+
         dfs = []
         for ticker in tickers:
             if self.is_cache_expired(ticker):
+                # If any of the tickers are expired, return None (Meaning we will re-download everything)
                 return None
             file_path = f'{DATA_FOLDER}{ticker}.csv'
             if os.path.exists(file_path):
@@ -59,15 +61,14 @@ class DataEngine:
 
     def download_new_data(self, tickers: list[str]) -> pd.DataFrame:
         tickers = list(dict.fromkeys(tickers))  # Remove duplicates
-        local_data = self.load_local_data(tickers)
-
-        if local_data is not None and not local_data.isnull().all().all():
-            print("Using cached data")
-            self.raw_data_df = local_data
-        else:
-            print("Fetching new data from Yahoo Finance")
-            self.raw_data_df = yf.download(tickers, group_by='ticker', auto_adjust=False, actions=False)
-            self.save_data_locally(self.raw_data_df, tickers)
+        # local_data = self.load_local_data(tickers)
+        # if local_data is not None and not local_data.isnull().all().all():
+        #     # print("Using cached data")
+        #     self.raw_data_df = local_data
+        # else:
+        #     # print("Fetching new data from Yahoo Finance")
+        self.raw_data_df = yf.download(tickers, group_by='ticker', auto_adjust=False, actions=False)
+        self.save_data_locally(self.raw_data_df, tickers)
 
         self.clean_data()
         return self.rets_df
