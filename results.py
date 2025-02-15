@@ -97,7 +97,7 @@ def display_results(backtest:bt.Backtester,data:dd.DataEngine, cleaned_inputs:in
     metrics_pretty_df = format_as_percent(metrics_pretty_df, COLS_TO_PRETTIFY)
     # Format the following columns to onlu 2 decimal places
     DECIMAL_COLS = ['Beta', 'Sharpe', 'Up Capture', 'Down Capture']
-    metrics_pretty_df[DECIMAL_COLS] = metrics_pretty_df[DECIMAL_COLS].applymap('{:.2f}'.format)
+    metrics_pretty_df[DECIMAL_COLS] = metrics_pretty_df[DECIMAL_COLS].map('{:.2f}'.format)
 
     st.write(metrics_pretty_df)
 
