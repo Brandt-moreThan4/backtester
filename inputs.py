@@ -4,6 +4,7 @@ import streamlit as st
 import plotly.express as px
 import datetime as dt
 import constants as C
+from utils import DynamicDates
 
 # Add a dataclass to hold the user inputs
 
@@ -20,16 +21,6 @@ class CleanInputs:
     bench_ticker: str
     fetch_new_data: bool = False
 
-
-today = dt.datetime.today()
-yesterday = today - dt.timedelta(days=1)
-day_before_yesterday = today - dt.timedelta(days=2)
-prior_year_end = dt.datetime(today.year - 1, 12, 31)
-one_year_ago = yesterday.replace(year=today.year - 1) - dt.timedelta(days=1)
-three_years_ago = yesterday.replace(year=today.year - 3) - dt.timedelta(days=1)
-five_years_ago = yesterday.replace(year=today.year - 5) - dt.timedelta(days=1)
-ten_years_ago = yesterday.replace(year=today.year - 10) - dt.timedelta(days=1)
-fifteen_years_ago = yesterday.replace(year=today.year - 15) - dt.timedelta(days=1)
 
 
 def get_user_inputs():
@@ -109,27 +100,27 @@ def get_user_inputs():
 
     # Automatically update start date based on selection
     date_dict = {
-        "1D": day_before_yesterday,
-        "YTD": prior_year_end,
-        "1 Year": one_year_ago,
-        "3 Years": three_years_ago,
-        "5 Years": five_years_ago,
-        "10 Years": ten_years_ago,
-        "15 Years": fifteen_years_ago,
+        "1D": DynamicDates.day_before_yesterday(),
+        "YTD": DynamicDates.prior_year_end(),
+        "1 Year": DynamicDates.one_year_ago(),
+        "3 Years": DynamicDates.three_years_ago(),
+        "5 Years": DynamicDates.five_years_ago(),
+        "10 Years": DynamicDates.ten_years_ago(),
+        "15 Years": DynamicDates.fifteen_years_ago(),
     }
 
 
     start_date_default = date_dict.get(date_option,None)
     if start_date_default is None:
         # If the default is none, 
-        start_date_default = day_before_yesterday
+        start_date_default = DynamicDates.day_before_yesterday()
 
     # Start date (users can override)
     start_date = st.date_input("Start Date (Assumes you invest at close of this date):", start_date_default)
 
     # End Date Selection
     # if date_option != 'Custom':
-    end_date = st.date_input("End Date (Assumes you liquidate at close of this date):", yesterday)
+    end_date = st.date_input("End Date (Assumes you liquidate at close of this date):", DynamicDates.yesterday())
     # else:
     #     end_date = st.date_input("End Date (Assumes you liquidate at close of this date):")
     # ------------------
